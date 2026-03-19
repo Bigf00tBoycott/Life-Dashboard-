@@ -1,0 +1,25 @@
+{
+  "name": "Life Path Dashboard",
+  "short_name": "Life Path",
+  "description": "Personal life dashboard with local persistence for finances, mood, roof log, goals, and skills.",
+  "start_url": "./life-path-dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#13151a",
+  "theme_color": "#13151a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icons/life-path-icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/life-path-icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
