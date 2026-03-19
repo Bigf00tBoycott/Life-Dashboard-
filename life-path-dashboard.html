@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#13151a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Life Path">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/life-path-icon-192.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/life-path-icon-192.svg">
 <title>Max — Life Path</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 
@@ -899,12 +906,61 @@ function initRadar(){
 }
 initRadar();
 
+const STORAGE_KEY='lp_state';
+const defaultState={
+  finances:{cash:'',donation1:true,donation2:false},
+  mood:[],
+  roofLog:{},
+  goals:[],
+  skills:[]
+};
+let state={...defaultState};
+
+function loadState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+    if(saved&&typeof saved==='object'){
+      state={
+        finances:{...defaultState.finances,...saved.finances},
+        mood:Array.isArray(saved.mood)?saved.mood:[],
+        roofLog:saved.roofLog&&typeof saved.roofLog==='object'?saved.roofLog:{},
+        goals:Array.isArray(saved.goals)?saved.goals:[],
+        skills:Array.isArray(saved.skills)?saved.skills:[]
+      };
+      return;
+    }
+    state={
+      ...defaultState,
+      mood:JSON.parse(localStorage.getItem('lp_moods')||'[]'),
+      roofLog:JSON.parse(localStorage.getItem('lp_roof')||'{}'),
+      goals:JSON.parse(localStorage.getItem('lp_goals')||'[]'),
+      skills:JSON.parse(localStorage.getItem('lp_skills')||'[]')
+    };
+  }catch(e){}
+}
+
+function saveState(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+}
+
+function hydrateUI(){
+  const finances=state.finances||defaultState.finances;
+  document.getElementById('i-cash').value=finances.cash ?? '';
+  document.getElementById('cb1').checked=!!finances.donation1;
+  document.getElementById('cb2').checked=!!finances.donation2;
+}
+
+loadState();
+
 // FINANCE
 function uf(){
-  const cash=parseFloat(document.getElementById('i-cash').value);
+  const cashInput=document.getElementById('i-cash').value;
+  const cash=parseFloat(cashInput);
   const d1=document.getElementById('cb1').checked;
   const d2=document.getElementById('cb2').checked;
-  if(!isNaN(cash)) document.getElementById('cash-d').textContent='$'+cash.toFixed(0);
+  state.finances={cash:cashInput,donation1:d1,donation2:d2};
+  saveState();
+  document.getElementById('cash-d').textContent='$'+(isNaN(cash)?'0':cash.toFixed(0));
   let pt=0,pc=0;
   if(d1){pt+=40;pc++;} if(d2){pt+=75;pc++;}
   document.getElementById('wk-p').textContent='$'+pt;
@@ -967,12 +1023,13 @@ function pM(){cM--;if(cM<0){cM=11;cY--;}renderCal();}
 function nM(){cM++;if(cM>11){cM=0;cY++;}renderCal();}
 
 // ROOF
-let ROOF={};try{ROOF=JSON.parse(localStorage.getItem('lp_roof')||'{}');}catch(e){}
+let ROOF=state.roofLog;
 function logRoof(type){
   const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
   const ykey=yesterday.toISOString().slice(0,10);
   ROOF[ykey]=type;
-  try{localStorage.setItem('lp_roof',JSON.stringify(ROOF));}catch(e){}
+  state.roofLog=ROOF;
+  saveState();
   document.getElementById('rbtn-roof').classList.toggle('sel',type==='roof');
   document.getElementById('rbtn-noroof').classList.toggle('sel',type==='noRoof');
   document.getElementById('roof-today-lbl').textContent=type==='roof'?'✓ Roof logged':'✓ Outside logged';
@@ -994,10 +1051,12 @@ function updateRoofStats(){
   document.getElementById('rbtn-noroof').classList.toggle('sel',last==='noRoof');
   if(last)document.getElementById('roof-today-lbl').textContent=last==='roof'?'Last night: roof':'Last night: outside';
 }
+hydrateUI();
+uf();
 renderCal();
 
 // MOOD
-let MOODS=[];try{MOODS=JSON.parse(localStorage.getItem('lp_moods')||'[]');}catch(e){}
+let MOODS=state.mood;
 let selMoodVal=0;
 const MOOD_MAP={5:{e:'😌',l:'Grounded'},4:{e:'🙂',l:'Good'},3:{e:'😐',l:'Neutral'},2:{e:'😔',l:'Low'},1:{e:'😞',l:'Rough'}};
 function selMood(v,el){selMoodVal=v;document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
@@ -1006,7 +1065,8 @@ function saveMood(){
   const note=document.getElementById('mood-note').value.trim();
   const today=new Date().toISOString().slice(0,10);
   MOODS.unshift({date:today,mood:selMoodVal,note});
-  try{localStorage.setItem('lp_moods',JSON.stringify(MOODS));}catch(e){}
+  state.mood=MOODS;
+  saveState();
   document.getElementById('mood-note').value='';
   document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sel'));
   selMoodVal=0;renderMood();
@@ -1076,11 +1136,11 @@ function renderHoro(){
 renderHoro();
 
 // GOALS
-let GOALS=[];try{GOALS=JSON.parse(localStorage.getItem('lp_goals')||'[]');}catch(e){}
+let GOALS=state.goals;
 let gFilter='all';
 const G_CLS={housing:'gp-housing',income:'gp-income',tech:'gp-tech',personal:'gp-personal',health:'gp-health'};
 const G_LBL={housing:'Housing',income:'Income',tech:'Tech',personal:'Personal',health:'Health'};
-function savG(){try{localStorage.setItem('lp_goals',JSON.stringify(GOALS));}catch(e){}}
+function savG(){state.goals=GOALS;saveState();}
 function addGoal(){const t=document.getElementById('g-title').value.trim();if(!t)return;GOALS.push({id:Date.now(),title:t,cat:document.getElementById('g-cat').value,due:document.getElementById('g-due').value,done:false});savG();document.getElementById('g-title').value='';document.getElementById('g-due').value='';renderGoals();}
 function togGoal(id){const g=GOALS.find(x=>x.id===id);if(g){g.done=!g.done;savG();renderGoals();}}
 function delGoal(id){GOALS=GOALS.filter(x=>x.id!==id);savG();renderGoals();}
@@ -1099,10 +1159,10 @@ function renderGoals(){
 renderGoals();
 
 // SKILLS
-let SKILLS=[];try{SKILLS=JSON.parse(localStorage.getItem('lp_skills')||'[]');}catch(e){}
+let SKILLS=state.skills;
 let skFilter='all';
 const LVS=['Beginner','Basic','Intermediate','Proficient','Advanced'];
-function savSk(){try{localStorage.setItem('lp_skills',JSON.stringify(SKILLS));}catch(e){}}
+function savSk(){state.skills=SKILLS;saveState();}
 function addSkill(){const n=document.getElementById('sk-name').value.trim();if(!n)return;if(SKILLS.find(s=>s.name.toLowerCase()===n.toLowerCase()))return;SKILLS.push({id:Date.now(),name:n,cat:document.getElementById('sk-cat').value,level:0});savSk();document.getElementById('sk-name').value='';renderSkills();}
 function setLv(id,lv){const s=SKILLS.find(x=>x.id===id);if(s){s.level=lv;savSk();renderSkills();}}
 function delSkill(id){SKILLS=SKILLS.filter(x=>x.id!==id);savSk();renderSkills();}
@@ -1461,7 +1521,7 @@ document.querySelectorAll('.dbf').forEach((b,i)=>{
 });
 
 // ── EXPORT / IMPORT ──
-const DATA_KEYS = ['lp_goals','lp_skills','lp_books','lp_moods','lp_horos','lp_roof'];
+const DATA_KEYS = ['lp_state','lp_goals','lp_skills','lp_books','lp_moods','lp_horos','lp_roof'];
 
 function exportData() {
   const backup = {};
@@ -1493,12 +1553,13 @@ function importData(event) {
           count++;
         }
       });
-      try { GOALS = JSON.parse(localStorage.getItem('lp_goals') || '[]'); renderGoals(); } catch(err) {}
-      try { SKILLS = JSON.parse(localStorage.getItem('lp_skills') || '[]'); renderSkills(); } catch(err) {}
+          loadState();
+      GOALS = state.goals; renderGoals();
+      SKILLS = state.skills; renderSkills();
+      MOODS = state.mood; renderMood();
+      ROOF = state.roofLog; hydrateUI(); uf(); renderCal();
       try { BOOKS = JSON.parse(localStorage.getItem('lp_books') || '[]'); renderBooks(); } catch(err) {}
-      try { MOODS = JSON.parse(localStorage.getItem('lp_moods') || '[]'); renderMood(); } catch(err) {}
       try { HOROS = JSON.parse(localStorage.getItem('lp_horos') || '[]'); renderHoro(); } catch(err) {}
-      try { ROOF = JSON.parse(localStorage.getItem('lp_roof') || '{}'); renderCal(); } catch(err) {}
       const fromDate = data._exported ? ' — from ' + data._exported.slice(0,10) : '';
       setStatus('Imported ' + count + ' data sets' + fromDate);
     } catch(err) {
@@ -1512,8 +1573,10 @@ function importData(event) {
 function clearData() {
   if (!confirm('Clear ALL saved data? Goals, skills, books, mood, horoscope, and roof logs will be deleted.')) return;
   DATA_KEYS.forEach(function(k) { localStorage.removeItem(k); });
-  GOALS = []; SKILLS = []; BOOKS = []; MOODS = []; HOROS = []; ROOF = {};
-  renderGoals(); renderSkills(); renderBooks(); renderMood(); renderHoro(); renderCal();
+  localStorage.removeItem(STORAGE_KEY);
+  state={...defaultState,finances:{...defaultState.finances},mood:[],roofLog:{},goals:[],skills:[]};
+  GOALS = state.goals; SKILLS = state.skills; MOODS = state.mood; ROOF = state.roofLog; BOOKS = []; HOROS = [];
+  hydrateUI(); uf(); renderGoals(); renderSkills(); renderBooks(); renderMood(); renderHoro(); renderCal();
   setStatus('All data cleared');
 }
 
@@ -1563,7 +1626,8 @@ function setDayRoof(type) {
   } else {
     ROOF[_dmDate] = type;
   }
-  try { localStorage.setItem('lp_roof', JSON.stringify(ROOF)); } catch(e) {}
+  state.roofLog = ROOF;
+  saveState();
 
   // Update button states
   document.getElementById('dm-btn-roof').className = 'dm-roof' + (type === 'roof' ? ' sel' : '');
@@ -1577,6 +1641,12 @@ function closeDayModal(event) {
   if (event && event.target !== document.getElementById('day-modal-overlay')) return;
   document.getElementById('day-modal-overlay').classList.remove('show');
   _dmDate = null;
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
 }
 
 </script>
