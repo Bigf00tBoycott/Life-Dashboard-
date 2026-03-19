@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Max — Life Path</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:    #13151a;
+  --sur:   #1c1f28;
+  --sur2:  #252935;
+  --bdr:   #363c4e;
+  --txt:   #f0f2f8;
+  --mut:   #9aa3b8;
+  --terra: #e8855a;
+  --sand:  #e8c070;
+  --sage:  #72cc82;
+  --dusk:  #82b8e8;
+  --rose:  #e86878;
+  --pup:   #c0a0e8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{height:100%;}
+body{
+  background:var(--bg);color:var(--txt);
+  font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;
+  min-height:100vh;display:flex;
+}
+
+/* grain overlay */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.22;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.68' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.07'/%3E%3C/svg%3E");
+}
+
+/* ── SIDEBAR NAV ── */
+.sidenav{
+  position:fixed;left:0;top:0;bottom:0;width:68px;
+  background:var(--sur);border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 0;z-index:100;gap:4px;
+}
+.sidenav-logo{
+  font-family:'Fraunces',serif;font-size:18px;color:var(--terra);
+  margin-bottom:16px;line-height:1;letter-spacing:-.02em;
+  writing-mode:vertical-lr;transform:rotate(180deg);
+  text-transform:uppercase;letter-spacing:.12em;font-size:9px;
+  color:var(--mut);padding-bottom:16px;border-bottom:1px solid var(--bdr);
+  margin-bottom:12px;width:100%;text-align:center;
+}
+.navbtn{
+  width:44px;height:44px;border-radius:10px;border:1px solid transparent;
+  background:none;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  transition:all .2s;position:relative;color:var(--mut);
+}
+.navbtn:hover{background:var(--sur2);border-color:var(--bdr);color:var(--txt);}
+.navbtn.on{background:var(--sur2);border-color:var(--terra);color:var(--terra);}
+.navbtn .nicon{font-size:18px;line-height:1;}
+.navbtn .nlbl{
+  font-size:7px;letter-spacing:.08em;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;line-height:1;
+}
+/* tooltip on hover */
+.navbtn::after{
+  content:attr(data-label);
+  position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:var(--sur2);border:1px solid var(--bdr);
+  color:var(--txt);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  padding:5px 10px;white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .15s;font-family:'JetBrains Mono',monospace;
+}
+.navbtn:hover::after{opacity:1;}
+.nav-divider{width:32px;height:1px;background:var(--bdr);margin:6px 0;}
+
+/* ── MAIN CONTENT ── */
+.main{margin-left:68px;flex:1;padding:36px 32px 80px;max-width:960px;}
+.pg{display:none;animation:fadeUp .35s ease both;}
+.pg.on{display:block;}
+
+/* ── PAGE HEADER ── */
+.phdr{margin-bottom:32px;}
+.phdr-eyebrow{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--mut);margin-bottom:8px;}
+.phdr h1{font-family:'Fraunces',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:300;line-height:1.1;color:var(--txt);}
+.phdr h1 em{color:var(--terra);font-style:italic;}
+.phdr-sub{font-size:11px;color:var(--mut);margin-top:8px;}
+
+/* vitality row */
+.vrow{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:14px;}
+.vnum{font-family:'Fraunces',serif;font-size:48px;color:var(--terra);line-height:1;font-weight:300;}
+.vlbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);}
+.vbar{flex:1;min-width:100px;height:2px;background:var(--bdr);border-radius:2px;overflow:hidden;}
+.vfill{height:100%;background:linear-gradient(90deg,var(--terra),var(--sand));width:59%;border-radius:2px;animation:growBar 1.1s ease .3s both;}
+
+/* ── SHARED ── */
+.narr{
+  background:var(--sur);border:1px solid var(--bdr);
+  border-left:3px solid var(--terra);padding:18px 22px;margin-bottom:30px;
+  font-family:'Fraunces',serif;font-size:15px;font-style:italic;line-height:1.9;color:var(--txt);
+}
+.sec{margin-bottom:40px;}
+.stl{
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);
+  margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.stl::after{content:'';flex:1;height:1px;background:var(--bdr);}
+.card{background:var(--sur);border:1px solid var(--bdr);transition:all .2s;}
+.card:hover{background:var(--sur2);border-color:var(--terra);}
+.btn{
+  background:transparent;border:1px solid var(--terra);color:var(--terra);
+  padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;
+  cursor:pointer;letter-spacing:.06em;transition:all .2s;
+}
+.btn:hover{background:var(--terra);color:var(--bg);}
+.inp{
+  background:var(--sur);border:1px solid var(--bdr);color:var(--txt);
+  padding:7px 11px;font-family:'JetBrains Mono',monospace;font-size:12px;
+}
+.inp:focus{outline:none;border-color:var(--terra);}
+.empty{font-size:12px;color:var(--mut);font-style:italic;padding:10px 0;}
+.del{background:none;border:none;color:var(--mut);cursor:pointer;font-size:15px;padding:0 3px;transition:color .2s;}
+.del:hover{color:var(--rose);}
+.pill{display:inline-block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:2px;}
+
+/* ── DOMAIN CARDS ── */
+.dgrd{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+.dc{padding:14px 15px;}
+.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.dn{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);}
+.ds{font-family:'Fraunces',serif;font-size:22px;line-height:1;font-weight:300;}
+.sg{color:var(--sage);}.sa{color:var(--sand);}.sr{color:var(--rose);}
+.db{height:2px;background:var(--bdr);margin-bottom:10px;border-radius:1px;overflow:hidden;}
+.dbf{height:100%;border-radius:1px;}
+.bg2{background:var(--sage);}.ba{background:var(--sand);}.br{background:var(--rose);}
+.dt{font-size:13px;color:var(--mut);line-height:1.7;margin-bottom:8px;}
+.da{font-size:12px;color:var(--terra);border-top:1px solid var(--bdr);padding-top:7px;}
+.da::before{content:'→ ';opacity:.5;}
+
+/* ── RADAR ── */
+.rw{background:var(--sur);border:1px solid var(--bdr);padding:22px;display:flex;justify-content:center;}
+
+/* ── TIMELINE ── */
+.tl{position:relative;padding-left:22px;}
+.tl::before{content:'';position:absolute;left:5px;top:0;bottom:0;width:1px;background:var(--bdr);}
+.tli{position:relative;margin-bottom:18px;}
+.dot{position:absolute;left:-18px;top:6px;width:9px;height:9px;border-radius:50%;border:1px solid;}
+.dp{background:var(--sur2);border-color:var(--mut);}
+.dnow{background:var(--terra);border-color:var(--terra);box-shadow:0 0 8px rgba(194,103,58,.5);}
+.dfut{background:var(--sur);border-color:var(--sand);border-style:dashed;}
+.dgrief{background:var(--rose);border-color:var(--rose);}
+.dhard{background:#2d1a1a;border-color:var(--rose);}
+.dmom{background:var(--pup);border-color:var(--pup);}
+.drel{background:var(--sand);border-color:var(--sand);}
+.dann{background:#3d2020;border-color:#b06060;}
+.tld{font-size:9px;letter-spacing:.18em;color:var(--mut);text-transform:uppercase;margin-bottom:2px;}
+.tle{font-size:14px;color:var(--txt);margin-bottom:3px;}
+.tln{font-size:13px;color:var(--mut);font-style:italic;}
+.ttag{display:inline-block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:2px;margin-bottom:4px;}
+.tg-grief{background:rgba(194,90,90,.12);color:var(--rose);}
+.tg-hard{background:rgba(45,26,26,.6);color:#c08080;}
+.tg-mom{background:rgba(155,130,194,.12);color:var(--pup);}
+.tg-rel{background:rgba(212,169,106,.12);color:var(--sand);}
+.tg-ann{background:rgba(61,32,32,.4);color:#b08080;}
+.tg-now{background:rgba(194,103,58,.12);color:var(--terra);}
+.tg-fut{background:rgba(212,169,106,.08);color:var(--sand);}
+
+/* ── FINANCE ── */
+.fgrd{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-bottom:18px;}
+.fc{padding:13px 15px;}
+.fl{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);margin-bottom:5px;}
+.fv{font-family:'Fraunces',serif;font-size:26px;line-height:1;margin-bottom:3px;font-weight:300;}
+.fn{font-size:10px;color:var(--mut);}
+.fvg{color:var(--sage);}.fva{color:var(--sand);}
+.alrt{background:rgba(194,90,90,.07);border:1px solid var(--rose);border-left:3px solid var(--rose);padding:10px 14px;font-size:11px;line-height:1.7;margin-bottom:14px;}
+.alrt strong{color:var(--rose);font-weight:700;}
+.alrt.ok{background:rgba(122,171,130,.06);border-color:var(--sage);border-left-color:var(--sage);}
+.alrt.ok strong{color:var(--sage);}
+table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px;}
+th{text-align:left;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:7px 10px;border-bottom:1px solid var(--bdr);}
+td{padding:8px 10px;border-bottom:1px solid var(--bdr);color:var(--txt);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--sur2);}
+.tdg{color:var(--sage);}.tda{color:var(--sand);}
+.finp{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
+.finp label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:4px;}
+.finp input[type=number]{width:125px;}
+.cbr{display:flex;align-items:center;gap:7px;padding-top:18px;}
+.cbr input{accent-color:var(--terra);width:13px;height:13px;}
+.cbr label{font-size:11px;color:var(--mut);}
+
+/* ── CALENDAR ── */
+.roof-bar{background:var(--sur);border:1px solid var(--bdr);padding:13px 15px;margin-bottom:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.roof-stats{display:flex;gap:14px;}
+.roof-stat{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.roof-stat-num{font-family:'Fraunces',serif;font-size:22px;line-height:1;font-weight:300;}
+.roof-stat-lbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);}
+.rn{color:var(--sage);}.nn{color:var(--rose);}
+.roof-log-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.roof-log-row label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);}
+.roof-btn{padding:6px 13px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;border:1px solid;transition:all .2s;}
+.roof-btn.roof{background:rgba(122,171,130,.08);border-color:var(--sage);color:var(--sage);}
+.roof-btn.roof:hover,.roof-btn.roof.sel{background:var(--sage);color:var(--bg);}
+.roof-btn.noRoof{background:rgba(194,90,90,.08);border-color:var(--rose);color:var(--rose);}
+.roof-btn.noRoof:hover,.roof-btn.noRoof.sel{background:var(--rose);color:var(--bg);}
+.cnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cnav button{background:var(--sur);border:1px solid var(--bdr);color:var(--mut);padding:5px 12px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;transition:all .2s;}
+.cnav button:hover{border-color:var(--terra);color:var(--terra);}
+.cml{font-family:'Fraunces',serif;font-size:18px;font-weight:300;}
+.cgrd{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cdow{text-align:center;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);padding:5px 0;}
+.cday{background:var(--sur);border:1px solid var(--bdr);min-height:58px;padding:4px;transition:border-color .15s;position:relative;}
+.cday:hover{border-color:var(--terra);}
+.cday.mt{background:rgba(18,16,14,.6);border-color:rgba(51,45,36,.3);}
+.cday.today{border-color:var(--terra);}
+.cday.today .dnum{color:var(--terra);}
+.cday.bday{border-color:var(--sand);}
+.cday.anniv{border-color:#804040;}
+.dnum{font-size:10px;color:var(--mut);margin-bottom:2px;}
+.cev{font-size:9px;padding:2px 3px;border-radius:2px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+.ep1{background:rgba(136,150,179,.18);color:var(--dusk);}
+.ep2{background:rgba(136,150,179,.35);color:var(--dusk);font-weight:700;}
+.ew{background:rgba(212,169,106,.18);color:var(--sand);}
+.ed{background:rgba(122,171,130,.15);color:var(--sage);}
+.eb{background:rgba(212,169,106,.12);color:var(--sand);font-size:8px;}
+.emn{background:rgba(155,130,194,.12);color:var(--pup);font-size:8px;}
+.eanniv{background:rgba(128,64,64,.2);color:#c08080;font-size:8px;}
+.roof-dot{width:6px;height:6px;border-radius:50%;position:absolute;top:3px;right:3px;}
+.roof-dot.r{background:var(--sage);}.roof-dot.n{background:var(--rose);}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:10px;}
+.li{display:flex;align-items:center;gap:5px;color:var(--mut);}
+.ldot{width:8px;height:8px;border-radius:1px;}
+.wsrow{background:var(--sur);border:1px solid var(--bdr);padding:11px 15px;margin-top:10px;display:flex;gap:20px;flex-wrap:wrap;}
+.wsi{display:flex;flex-direction:column;gap:2px;}
+.wsl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);}
+.wsv{font-family:'Fraunces',serif;font-size:20px;font-weight:300;}
+.logtip{background:var(--sur);border:1px solid var(--bdr);border-left:3px solid var(--dusk);padding:12px 16px;font-size:11px;line-height:1.9;margin-bottom:20px;}
+
+/* ── MOOD ── */
+.mood-today{background:var(--sur);border:1px solid var(--bdr);padding:18px;margin-bottom:18px;}
+.mood-today h3{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-bottom:12px;}
+.mood-btns{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.mbtn{padding:8px 12px;font-size:16px;background:var(--sur2);border:1px solid var(--bdr);cursor:pointer;border-radius:6px;transition:all .2s;}
+.mbtn:hover{border-color:var(--terra);}
+.mbtn.sel{border-color:var(--terra);background:rgba(194,103,58,.1);box-shadow:0 0 8px rgba(194,103,58,.15);}
+.mbtn span{display:block;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.mood-note-row{display:flex;gap:8px;margin-top:8px;}
+.mood-history{display:grid;gap:5px;}
+.mhi{background:var(--sur);border:1px solid var(--bdr);padding:10px 13px;display:flex;align-items:center;gap:12px;}
+.mhi-emoji{font-size:18px;min-width:26px;}
+.mhi-info{flex:1;}
+.mhi-date{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);margin-bottom:2px;}
+.mhi-note{font-size:13px;color:var(--txt);}
+.mhi-moon{font-size:10px;color:var(--pup);margin-left:auto;}
+.mood-chart-wrap{background:var(--sur);border:1px solid var(--bdr);padding:16px;margin-bottom:18px;}
+
+/* ── HOROSCOPE ── */
+.horo-today{background:var(--sur);border:1px solid var(--bdr);border-left:3px solid var(--pup);padding:16px 18px;margin-bottom:18px;}
+.horo-today h3{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--pup);margin-bottom:10px;}
+.horo-inputs{display:grid;gap:10px;margin-bottom:12px;}
+.horo-inputs label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:3px;}
+.horo-inputs textarea{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6;resize:vertical;min-height:72px;}
+.horo-inputs textarea:focus{outline:none;border-color:var(--pup);}
+.acc-btns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;}
+.abtn{padding:6px 11px;font-size:10px;background:var(--sur2);border:1px solid var(--bdr);cursor:pointer;transition:all .2s;font-family:'JetBrains Mono',monospace;color:var(--mut);}
+.abtn:hover,.abtn.sel{border-color:var(--pup);color:var(--pup);background:rgba(155,130,194,.1);}
+.horo-stats{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.hstat{padding:11px 15px;flex:1;min-width:90px;}
+.hsn{font-family:'Fraunces',serif;font-size:22px;color:var(--pup);font-weight:300;}
+.hsl{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);}
+.horo-list{display:grid;gap:6px;}
+.hcard{background:var(--sur);border:1px solid var(--bdr);padding:13px 15px;transition:all .2s;}
+.hcard:hover{background:var(--sur2);}
+.hcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:7px;}
+.hcard-date{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);}
+.hcard-acc{font-size:11px;font-weight:700;}
+.acc-5{color:var(--sage);}.acc-4{color:#86efac;}.acc-3{color:var(--sand);}.acc-2{color:#fb923c;}.acc-1{color:var(--rose);}
+.hcard-text{font-size:12px;color:var(--mut);line-height:1.7;margin-bottom:6px;font-style:italic;}
+.hcard-note{font-size:13px;color:var(--txt);line-height:1.7;}
+.moon-phase-row{display:flex;gap:5px;align-items:center;font-size:11px;color:var(--pup);margin-top:5px;}
+
+/* ── GOALS ── */
+.gadd{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
+.gadd input,.gadd select{flex:1;min-width:110px;}
+.gcats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.gcat{padding:3px 10px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1px solid var(--bdr);color:var(--mut);transition:all .2s;}
+.gcat.on{border-color:var(--terra);color:var(--terra);}
+.glist{display:grid;gap:6px;}
+.gitem{padding:11px 13px;display:flex;gap:11px;align-items:flex-start;}
+.gitem.done{opacity:.4;}
+.gchk{width:14px;height:14px;accent-color:var(--terra);margin-top:3px;flex-shrink:0;cursor:pointer;}
+.ginfo{flex:1;}
+.gtitle{font-size:14px;color:var(--txt);margin-bottom:3px;}
+.gtitle.done{text-decoration:line-through;color:var(--mut);}
+.gmeta{font-size:9px;color:var(--mut);}
+.gp-housing{background:rgba(136,150,179,.12);color:var(--dusk);}
+.gp-income{background:rgba(212,169,106,.12);color:var(--sand);}
+.gp-tech{background:rgba(122,171,130,.12);color:var(--sage);}
+.gp-personal{background:rgba(155,130,194,.12);color:var(--pup);}
+.gp-health{background:rgba(194,90,90,.12);color:var(--rose);}
+
+/* ── SKILLS ── */
+.skadd{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.skadd input,.skadd select{flex:1;min-width:110px;}
+.skcats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.skcat{padding:3px 10px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1px solid var(--bdr);color:var(--mut);transition:all .2s;}
+.skcat.on{border-color:var(--terra);color:var(--terra);}
+.sklist{display:grid;gap:7px;}
+.skcard{padding:13px 15px;}
+.skh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.skname{font-size:14px;color:var(--txt);}
+.skcat2{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);}
+.skbw{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
+.skb{flex:1;height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;}
+.skbf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--terra),var(--sand));}
+.sklv{font-size:9px;color:var(--terra);min-width:72px;text-align:right;}
+.skbtns{display:flex;gap:3px;flex-wrap:wrap;}
+.slb{background:var(--sur2);border:1px solid var(--bdr);color:var(--mut);padding:3px 7px;font-size:9px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s;}
+.slb:hover{border-color:var(--terra);color:var(--terra);}
+.slb.on{border-color:var(--terra);color:var(--terra);background:rgba(194,103,58,.08);}
+
+/* ── BOOKS ── */
+.badd{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.badd input,.badd select{flex:1;min-width:110px;}
+.bstats{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.bstat{padding:11px 15px;text-align:center;flex:1;min-width:75px;}
+.bsn{font-family:'Fraunces',serif;font-size:24px;color:var(--terra);font-weight:300;}
+.bsl{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);}
+.bfilt{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.bf{padding:3px 10px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1px solid var(--bdr);color:var(--mut);transition:all .2s;}
+.bf.on{border-color:var(--terra);color:var(--terra);}
+.blist{display:grid;gap:7px;}
+.bcard{padding:13px 15px;}
+.btitle{font-size:16px;font-family:'Fraunces',serif;color:var(--txt);margin-bottom:3px;font-weight:300;}
+.bauthor{font-size:10px;color:var(--mut);margin-bottom:5px;}
+.brow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.bs-reading{background:rgba(136,150,179,.15);color:var(--dusk);}
+.bs-done{background:rgba(122,171,130,.15);color:var(--sage);}
+.bs-queue{background:rgba(51,45,36,.6);color:var(--mut);}
+.brating{color:var(--sand);font-size:13px;letter-spacing:1px;}
+.bsel{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;font-family:'JetBrains Mono',monospace;font-size:10px;}
+
+/* ── JOURNAL ── */
+.jsearch{width:100%;margin-bottom:6px;}
+.jcount{font-size:10px;color:var(--mut);margin-bottom:14px;}
+.j-week{margin-bottom:22px;}
+.j-week-hdr{background:var(--sur2);border:1px solid var(--bdr);border-left:3px solid var(--pup);padding:13px 16px;cursor:pointer;transition:all .2s;}
+.j-week-hdr:hover{border-left-color:var(--terra);}
+.j-week-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--terra);margin-bottom:3px;}
+.j-week-count{font-size:9px;color:var(--mut);}
+.j-week-summary{font-family:'Fraunces',serif;font-size:13px;font-style:italic;color:var(--txt);line-height:1.8;margin-top:7px;}
+.j-week-body{display:none;padding-top:3px;}
+.j-week-body.show{display:block;}
+.j-day{margin-bottom:3px;}
+.j-day-hdr{background:var(--sur);border:1px solid var(--bdr);padding:9px 13px;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);cursor:pointer;transition:all .2s;}
+.j-day-hdr:hover{color:var(--txt);}
+.j-day-entries{display:none;padding:2px 0;}
+.j-day-entries.show{display:block;}
+.jcard{padding:13px 15px;cursor:pointer;margin-bottom:2px;}
+.jcard.open{border-color:var(--terra);}
+.jtitle{font-size:16px;font-family:'Fraunces',serif;color:var(--txt);font-weight:300;}
+.jbody{font-size:13px;color:var(--txt);line-height:1.85;margin-top:9px;white-space:pre-wrap;border-top:1px solid var(--bdr);padding-top:9px;display:none;}
+.jbody.show{display:block;}
+.jsearch-results{display:grid;gap:5px;margin-top:12px;}
+
+/* ── REFLECTION ── */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+.tag{padding:4px 10px;background:var(--sur);border:1px solid var(--bdr);font-size:10px;letter-spacing:.08em;color:var(--txt);transition:all .2s;}
+.tag:hover{border-color:var(--terra);color:var(--terra);}
+.th4{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-bottom:7px;}
+.ti{padding:9px 12px;background:var(--sur);border:1px solid var(--bdr);margin-bottom:5px;font-size:11px;color:var(--txt);line-height:1.6;}
+.ti.ten{border-left:2px solid var(--sand);}
+.ti.flow{border-left:2px solid var(--sage);}
+.ti.blk{border-left:2px solid var(--rose);}
+.prms{display:grid;gap:8px;counter-reset:p;}
+.prm{background:var(--sur);border:1px solid var(--bdr);padding:14px 18px 14px 40px;font-family:'Fraunces',serif;font-size:15px;font-style:italic;line-height:1.75;position:relative;transition:background .2s;counter-increment:p;font-weight:300;}
+.prm:hover{background:var(--sur2);}
+.prm::before{content:counter(p);position:absolute;left:14px;top:14px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--mut);font-style:normal;}
+.stps{display:grid;gap:7px;}
+.stp{display:flex;gap:11px;padding:11px 14px;background:var(--sur);border:1px solid var(--bdr);align-items:flex-start;transition:all .2s;}
+.stp:hover{background:var(--sur2);border-color:var(--terra);}
+.spn{font-size:9px;color:var(--terra);letter-spacing:.08em;padding-top:2px;min-width:18px;}
+.spt{font-size:14px;color:var(--txt);line-height:1.6;}
+.spt strong{color:var(--terra);font-weight:400;}
+
+.foot{margin-top:44px;border-top:1px solid var(--bdr);padding-top:14px;font-size:10px;color:var(--mut);text-align:center;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes growBar{from{width:0}}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .sidenav{width:100%;height:56px;flex-direction:row;bottom:0;top:auto;padding:0 12px;border-right:none;border-top:1px solid var(--bdr);overflow-x:auto;justify-content:flex-start;gap:2px;}
+  .sidenav-logo{display:none;}
+  .nav-divider{display:none;}
+  .navbtn{width:52px;height:44px;flex-shrink:0;}
+  .navbtn::after{display:none;}
+  .main{margin-left:0;margin-bottom:56px;padding:20px 14px 40px;}
+  .dgrd{grid-template-columns:1fr;}
+  .fgrd{grid-template-columns:1fr 1fr;}
+}
+
+  /* EXPORT / IMPORT */
+  .data-bar{
+    position:fixed;bottom:0;left:68px;right:0;
+    background:var(--sur);border-top:1px solid var(--bdr);
+    padding:10px 24px;display:flex;align-items:center;gap:12px;
+    z-index:200;flex-wrap:wrap;
+  }
+  .data-bar-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);margin-right:4px;}
+  .dbtn{
+    padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;
+    cursor:pointer;border:1px solid;transition:all .2s;letter-spacing:.04em;
+  }
+  .dbtn-export{background:rgba(106,191,122,.08);border-color:var(--sage);color:var(--sage);}
+  .dbtn-export:hover{background:var(--sage);color:var(--bg);}
+  .dbtn-import{background:rgba(122,168,212,.08);border-color:var(--dusk);color:var(--dusk);}
+  .dbtn-import:hover{background:var(--dusk);color:var(--bg);}
+  .dbtn-clear{background:rgba(224,96,112,.06);border-color:var(--rose);color:var(--rose);}
+  .dbtn-clear:hover{background:var(--rose);color:var(--bg);}
+  .data-status{font-size:10px;color:var(--mut);margin-left:auto;}
+  .main{padding-bottom:60px;}
+  @media(max-width:640px){
+    .data-bar{left:0;bottom:56px;}
+    .main{padding-bottom:110px;}
+  }
+
+
+  /* EXPORT/IMPORT */
+  .data-toolbar{
+    position:fixed;bottom:20px;right:20px;
+    display:flex;gap:8px;z-index:200;
+  }
+  .data-toolbar button{
+    background:var(--sur2);border:1px solid var(--bdr);
+    color:var(--mut);padding:8px 14px;font-family:'Space Mono',monospace;
+    font-size:11px;cursor:pointer;transition:all .2s;
+    box-shadow:0 2px 12px rgba(0,0,0,.4);
+  }
+  .data-toolbar button:hover{border-color:var(--terra);color:var(--terra);}
+  .data-toolbar .import-btn{position:relative;overflow:hidden;}
+  .data-toolbar .import-btn input[type=file]{
+    position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;
+  }
+  .toast{
+    position:fixed;bottom:70px;right:20px;
+    background:var(--sur2);border:1px solid var(--sage);color:var(--sage);
+    padding:10px 16px;font-family:'Space Mono',monospace;font-size:12px;
+    z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+
+
+  /* DAY MODAL */
+  .day-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;}
+  .day-modal-overlay.show{display:flex;}
+  .day-modal{background:var(--sur);border:1px solid var(--bdr);padding:24px 28px;min-width:260px;max-width:340px;width:90%;}
+  .day-modal-date{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;}
+  .day-modal-title{font-family:'Fraunces',serif;font-size:18px;font-weight:300;color:var(--txt);margin-bottom:18px;}
+  .day-modal-btns{display:flex;gap:10px;margin-bottom:14px;}
+  .day-modal-btns button{flex:1;padding:10px 0;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;border:1px solid;transition:all .2s;}
+  .dm-roof{background:rgba(106,191,122,.08);border-color:var(--sage);color:var(--sage);}
+  .dm-roof:hover,.dm-roof.sel{background:var(--sage);color:var(--bg);}
+  .dm-noroof{background:rgba(224,96,112,.08);border-color:var(--rose);color:var(--rose);}
+  .dm-noroof:hover,.dm-noroof.sel{background:var(--rose);color:var(--bg);}
+  .dm-clear{background:none;border-color:var(--bdr);color:var(--mut);font-size:11px;padding:7px 0;}
+  .dm-clear:hover{border-color:var(--mut);color:var(--txt);}
+  .day-modal-close{width:100%;background:none;border:1px solid var(--bdr);color:var(--mut);padding:8px 0;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;margin-top:4px;transition:all .2s;}
+  .day-modal-close:hover{border-color:var(--terra);color:var(--terra);}
+  .day-modal-events{font-size:11px;color:var(--mut);margin-bottom:14px;line-height:1.7;border-top:1px solid var(--bdr);padding-top:12px;}
+  .day-modal-events div{margin-bottom:2px;}
+
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR NAV ══ -->
+<nav class="sidenav">
+  <div class="sidenav-logo">Max</div>
+  <button class="navbtn on"  onclick="gt('overview',this)"  data-label="Overview">  <span class="nicon">◈</span><span class="nlbl">Life</span></button>
+  <button class="navbtn"     onclick="gt('finances',this)"  data-label="Finances">  <span class="nicon">◎</span><span class="nlbl">Money</span></button>
+  <button class="navbtn"     onclick="gt('calendar',this)"  data-label="Calendar">  <span class="nicon">◷</span><span class="nlbl">Cal</span></button>
+  <button class="navbtn"     onclick="gt('mood',this)"      data-label="Mood">      <span class="nicon">◐</span><span class="nlbl">Mood</span></button>
+  <button class="navbtn"     onclick="gt('horoscope',this)" data-label="Horoscope"> <span class="nicon">☽</span><span class="nlbl">Stars</span></button>
+  <div class="nav-divider"></div>
+  <button class="navbtn"     onclick="gt('goals',this)"     data-label="Goals">     <span class="nicon">◉</span><span class="nlbl">Goals</span></button>
+  <button class="navbtn"     onclick="gt('skills',this)"    data-label="Skills">    <span class="nicon">▲</span><span class="nlbl">Skills</span></button>
+  <button class="navbtn"     onclick="gt('books',this)"     data-label="Reading">   <span class="nicon">▭</span><span class="nlbl">Books</span></button>
+  <div class="nav-divider"></div>
+  <button class="navbtn"     onclick="gt('journal',this)"   data-label="Journal">   <span class="nicon">✦</span><span class="nlbl">Journal</span></button>
+  <button class="navbtn"     onclick="gt('reflect',this)"   data-label="Reflection"><span class="nicon">⟳</span><span class="nlbl">Reflect</span></button>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+<!-- OVERVIEW -->
+<div id="pg-overview" class="pg on">
+  <div class="phdr">
+    <div class="phdr-eyebrow">Life Path · March 2026 · Oklahoma City, OK</div>
+    <h1 style="font-family:'Fraunces',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:300;">You are <em style="color:var(--terra);font-style:italic;">still here.</em></h1>
+    <div class="vrow">
+      <div><div class="vnum">5.9</div><div class="vlbl">Overall Vitality</div></div>
+      <div class="vbar"><div class="vfill"></div></div>
+    </div>
+  </div>
+  <div class="narr">You are a 30-year-old man — born May 12, 1995 in OKC — sleeping outside most nights, spending your days reading at the library, doing yard work with Nick, picking up InstaWork shifts, and now Express Employment temp work. You lost your mom in 2023. You became homeless that same summer. You've been in two relationships since, both left on good terms. $762.50 earned in March. You are building something — quietly, stubbornly, one day at a time.</div>
+  <div class="sec">
+    <div class="stl">Life Domains</div>
+    <div class="dgrd">
+      <div class="card dc"><div class="dh"><div class="dn">🏥 Health</div><div class="ds sa">5</div></div><div class="db"><div class="dbf ba" style="width:50%"></div></div><div class="dt">Physically active but irregular sleep and food instability take a real toll over time.</div><div class="da">Track food and sleep this week.</div></div>
+      <div class="card dc"><div class="dh"><div class="dn">💼 Work</div><div class="ds sa">5</div></div><div class="db"><div class="dbf ba" style="width:50%"></div></div><div class="dt">Three income streams now active — Nick, Express, InstaWork. Still call-dependent but diversifying.</div><div class="da">Keep adding sources. One with a schedule.</div></div>
+      <div class="card dc"><div class="dh"><div class="dn">💰 Finance</div><div class="ds sa">4</div></div><div class="db"><div class="dbf ba" style="width:40%"></div></div><div class="dt">$762.50 this month is real. Still no stable floor — but the ceiling is rising.</div><div class="da">See Finances tab for breakdown.</div></div>
+      <div class="card dc"><div class="dh"><div class="dn">❤️ Relationships</div><div class="ds sg">8</div></div><div class="db"><div class="dbf bg2" style="width:80%"></div></div><div class="dt">Warm exits from two relationships. On good terms with both. Still love kids that aren't yours.</div><div class="da">Sit with the discomfort. It's telling you something.</div></div>
+      <div class="card dc"><div class="dh"><div class="dn">🌱 Growth</div><div class="ds sg">7</div></div><div class="db"><div class="dbf bg2" style="width:70%"></div></div><div class="dt">One year intentional focus on relationships. Chose gratitude over bitterness — twice.</div><div class="da">Name the one thing you've learned.</div></div>
+      <div class="card dc"><div class="dh"><div class="dn">🎯 Goals</div><div class="ds sa">5</div></div><div class="db"><div class="dbf ba" style="width:50%"></div></div><div class="dt">Goal: stability. Knowing where you'll sleep. Foundation for everything else.</div><div class="da">What does stability look like in 90 days?</div></div>
+      <div class="card dc"><div class="dh"><div class="dn">🎨 Creativity</div><div class="ds sa">6</div></div><div class="db"><div class="dbf ba" style="width:60%"></div></div><div class="dt">Reading all day. Tracking full moons. Making face with strangers. Not numb — present.</div><div class="da">What are you reading right now?</div></div>
+      <div class="card dc"><div class="dh"><div class="dn">🧘 Inner Life</div><div class="ds sg">7</div></div><div class="db"><div class="dbf bg2" style="width:70%"></div></div><div class="dt">35.4571326, -97.5053227 held you when nothing else did. You carry grief without being destroyed.</div><div class="da">Go back sometime. See how far you've walked.</div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="stl">Radar</div>
+    <div class="rw"><canvas id="radarChart" style="max-width:280px;max-height:280px;"></canvas></div>
+  </div>
+  <div class="sec">
+    <div class="stl">Life Timeline</div>
+    <div class="tl">
+      <div class="tli"><div class="dot dp"></div><div class="tld">1995</div><div class="tle">Born in Oklahoma City, OK</div></div>
+      <div class="tli"><div class="dot dgrief"></div><div class="ttag tg-grief">Loss</div><div class="tld">January 10, 2023</div><div class="tle">Mom passed away</div><div class="tln">The ground shifted. You kept going.</div></div>
+      <div class="tli"><div class="dot dhard"></div><div class="ttag tg-hard">Hard stretch</div><div class="tld">4th of July weekend, 2023</div><div class="tle">Became homeless</div><div class="tln">Same year. Heaviest stretch.</div></div>
+      <div class="tli"><div class="dot dmom"></div><div class="ttag tg-mom">Key moment</div><div class="tld">May 9, 2024</div><div class="tle">Comedy show with Krista at OCCC</div><div class="tln">A night that meant something.</div></div>
+      <div class="tli"><div class="dot dhard"></div><div class="ttag tg-hard">Hard stretch</div><div class="tld">November 2024 – March 31, 2025</div><div class="tle">Difficult period</div><div class="tln">You made it through.</div></div>
+      <div class="tli"><div class="dot dp"></div><div class="tld">~1 year ago</div><div class="tle">Began intentional focus on relationships</div></div>
+      <div class="tli"><div class="dot drel"></div><div class="ttag tg-rel">Relationship</div><div class="tld">April – June 2025</div><div class="tle">Relationship with Gabby</div><div class="tln">On good terms. Gratitude replaced resentment.</div></div>
+      <div class="tli"><div class="dot drel"></div><div class="ttag tg-rel">Relationship</div><div class="tld">July 2025 – February 2026</div><div class="tle">Relationship with Krista — 3 kids, baby Klyde</div><div class="tln">Gave you shelter. You gave presence and love.</div></div>
+      <div class="tli"><div class="dot dp"></div><div class="tld">Feb 28 – Mar 2, 2026</div><div class="tle">Dad's house — $150</div></div>
+      <div class="tli"><div class="dot dnow"></div><div class="ttag tg-now">Now</div><div class="tld">March 16, 2026</div><div class="tle">OKC Library · $762.50 earned this month · Age 30</div><div class="tln">Three income streams. Reading. Building.</div></div>
+      <div class="tli"><div class="dot dann"></div><div class="ttag tg-ann">Anniversary</div><div class="tld">March 14</div><div class="tle">Krista's wedding anniversary</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">March 22</div><div class="tle">🎂 Dad Kenny Stephens's birthday</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">April 1–2</div><div class="tle">🌕 Pink Moon</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">April 3</div><div class="tle">Taking Dad to a procedure</div><div class="tln">He needs you there. You'll be there.</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">April 16</div><div class="tle">🎂 Kayoas Mitchell's birthday</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">April 26</div><div class="tle">🎂 Angie's birthday</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">April 28</div><div class="tle">🎂 Dustin Bouckaert's birthday</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">May 1–2</div><div class="tle">🌕 Flower Moon</div></div>
+      <div class="tli"><div class="dot dfut"></div><div class="ttag tg-fut">Upcoming</div><div class="tld">May 12, 2026</div><div class="tle">🎂 Your 31st birthday</div><div class="tln">Google already has it marked.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FINANCES -->
+<div id="pg-finances" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Finances</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">Money <em style="color:var(--sand);font-style:italic;">in, money out.</em></h1></div>
+  <div class="sec">
+    <div class="stl">This Week — Mar 9–15</div>
+    <div class="alrt" id="wk-alrt"><strong>⚠ Plasma #1 ($40) logged Mar 13.</strong> 2nd donation ($75) still available — week resets Monday Mar 16.</div>
+    <div class="fgrd">
+      <div class="card fc"><div class="fl">Cash on Hand</div><div class="fv fva" id="cash-d">—</div><div class="fn">Enter below ↓</div></div>
+      <div class="card fc"><div class="fl">This Week Plasma</div><div class="fv fvg" id="wk-p">$40</div><div class="fn" id="wk-pc">1 of 2 done</div></div>
+      <div class="card fc"><div class="fl">March Total</div><div class="fv fvg">$785</div><div class="fn">Confirmed</div></div>
+      <div class="card fc"><div class="fl">Plasma Max/Month</div><div class="fv fvg">$460</div><div class="fn">2×/wk × 4 wks</div></div>
+    </div>
+    <div class="finp">
+      <div><label>Current Cash ($)</label><input class="inp" type="number" id="i-cash" placeholder="e.g. 23" oninput="uf()"></div>
+      <div class="cbr"><input type="checkbox" id="cb1" onchange="uf()" checked><label for="cb1">Plasma #1 done (+$40)</label></div>
+      <div class="cbr"><input type="checkbox" id="cb2" onchange="uf()"><label for="cb2">Plasma #2 done (+$75)</label></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="stl">March Income Log</div>
+    <table style="background:var(--sur);border:1px solid var(--bdr)">
+      <thead><tr><th>Date</th><th>Event</th><th>Amount</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Feb 28–Mar 2</td><td>🏠 Dad's House</td><td class="tdg">$150</td><td>Nav $50 + cleaning $100</td></tr>
+        <tr><td>Mar 1</td><td>🩸 Plasma 2nd</td><td class="tdg">$75</td><td>Grifols Talecris</td></tr>
+        <tr><td>Mar 6</td><td>🩸 Plasma 1st</td><td class="tdg">$40</td><td>Grifols Talecris</td></tr>
+        <tr><td>Mar 7</td><td>💰 Work w/ Nick</td><td class="tdg">$100</td><td>10:30am–5pm</td></tr>
+        <tr><td>Mar 9</td><td>💰 Work w/ Nick</td><td class="tdg">$45</td><td>5pm–11:30pm</td></tr>
+        <tr><td>Mar 12</td><td>💰 Work w/ Nick</td><td class="tdg">$40</td><td>4pm–6:30pm</td></tr>
+        <tr><td>Mar 13</td><td>🩸 Plasma 1st</td><td class="tdg">$40</td><td>Grifols Talecris</td></tr>
+        <tr><td>Mar 13</td><td>💼 InstaWork</td><td class="tdg">$60</td><td>Paycom — cancelled &lt;24h, still paid</td></tr>
+        <tr><td>Mar 14</td><td>💰 Work w/ Nick</td><td class="tdg">$95</td><td>10am–5pm</td></tr>
+        <tr><td>Mar 15</td><td>🏠 Dad's House</td><td class="tdg">$60</td><td>Replaced garbage disposal</td></tr>
+        <tr><td>Mar 18</td><td>💼 Express Employment</td><td class="tdg">$97.50</td><td>Great Plains Kubota, 6.5hrs @ $15/hr</td></tr>
+        <tr style="border-top:2px solid var(--bdr)"><td colspan="2"><strong>March Total</strong></td><td class="tdg"><strong>$762.50</strong></td><td style="color:var(--mut)">Updated Mar 19</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec">
+    <div class="stl">Income Sources</div>
+    <table style="background:var(--sur);border:1px solid var(--bdr)">
+      <thead><tr><th>Source</th><th>Rate</th><th>Frequency</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>🩸 Plasma 1st</td><td class="tdg">$40</td><td>Weekly (Mon reset)</td><td>48h min before 2nd</td></tr>
+        <tr><td>🩸 Plasma 2nd</td><td class="tdg">$75</td><td>Same week</td><td>$115 max/week</td></tr>
+        <tr><td>💰 Work w/ Nick</td><td class="tda">$40–$100</td><td>When called</td><td>Yard work, OKC</td></tr>
+        <tr><td>🏠 Dad's house</td><td class="tda">Varies</td><td>Weekends</td><td>Tasks + chores</td></tr>
+        <tr><td>💼 Express Employment</td><td class="tda">$15/hr</td><td>As assigned</td><td>Temp agency, OKC</td></tr>
+        <tr><td>💼 InstaWork</td><td class="tda">Varies</td><td>On-demand</td><td>Event/venue shifts</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec">
+    <div class="stl">Expenses</div>
+    <table style="background:var(--sur);border:1px solid var(--bdr)">
+      <thead><tr><th>Expense</th><th>Amount</th><th>Due</th></tr></thead>
+      <tbody>
+        <tr><td>Food / daily needs</td><td class="tda">Variable</td><td>Daily</td></tr>
+        <tr><td>Phone bill</td><td class="tda">$?</td><td>Monthly</td></tr>
+        <tr><td colspan="3" style="color:var(--mut);font-style:italic;font-size:10px">Tell me other costs to add</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div id="pg-calendar" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Calendar</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">Days <em style="color:var(--sand);font-style:italic;">logged.</em></h1></div>
+  <div class="sec">
+    <div class="stl">Logging Format</div>
+    <div class="logtip">
+      Only confirmed Google Calendar events appear — nothing assumed.<br>
+      <span style="color:var(--dusk)">🩸 Plasma $40 · 🩸 Plasma $75</span><br>
+      <span style="color:var(--sand)">💰 Work w/ Nick $[amount]</span><br>
+      <span style="color:var(--sage)">🏠 Dad's House</span><br>
+      <span style="color:var(--mut);font-size:10px">Say "sync dashboard" anytime to pull new events.</span>
+    </div>
+  </div>
+  <div class="roof-bar">
+    <div class="roof-stats">
+      <div class="roof-stat"><div class="roof-stat-num rn" id="roof-count">0</div><div class="roof-stat-lbl">🏠 Roof</div></div>
+      <div class="roof-stat"><div class="roof-stat-num nn" id="noroof-count">0</div><div class="roof-stat-lbl">⛺ Outside</div></div>
+      <div class="roof-stat"><div class="roof-stat-num" id="roof-pct" style="color:var(--mut)">—</div><div class="roof-stat-lbl">% Roof</div></div>
+    </div>
+    <div class="roof-log-row">
+      <label>Last night:</label>
+      <button class="roof-btn roof" id="rbtn-roof" onclick="logRoof('roof')">🏠 Roof</button>
+      <button class="roof-btn noRoof" id="rbtn-noroof" onclick="logRoof('noRoof')">⛺ Outside</button>
+      <span id="roof-today-lbl" style="font-size:10px;color:var(--mut)"></span>
+    </div>
+  </div>
+  <div class="cnav">
+    <button onclick="pM()">← Prev</button>
+    <div class="cml" id="clbl"></div>
+    <button onclick="nM()">Next →</button>
+  </div>
+  <div class="cgrd"><div class="cdow">Sun</div><div class="cdow">Mon</div><div class="cdow">Tue</div><div class="cdow">Wed</div><div class="cdow">Thu</div><div class="cdow">Fri</div><div class="cdow">Sat</div></div>
+  <div class="cgrd" id="cal"></div>
+  <div class="leg">
+    <div class="li"><div class="ldot ep1"></div>Plasma $40</div>
+    <div class="li"><div class="ldot ep2"></div>Plasma $75</div>
+    <div class="li"><div class="ldot ew"></div>Work</div>
+    <div class="li"><div class="ldot ed"></div>Dad's</div>
+    <div class="li"><div class="ldot eb"></div>Birthday</div>
+    <div class="li"><div class="ldot emn"></div>Moon</div>
+    <div class="li"><div class="roof-dot r" style="position:static;display:inline-block"></div>Roof</div>
+    <div class="li"><div class="roof-dot n" style="position:static;display:inline-block"></div>Outside</div>
+  </div>
+  <div class="wsrow">
+    <div class="wsi"><div class="wsl">This Week Plasma</div><div class="wsv" id="wsp">$40</div></div>
+    <div class="wsi"><div class="wsl">Donations</div><div class="wsv" id="wsc">1 / 2</div></div>
+    <div class="wsi"><div class="wsl">Week Resets</div><div class="wsv" style="font-size:13px;padding-top:5px">Monday</div></div>
+    <div class="wsi"><div class="wsl">Days Left</div><div class="wsv" id="wsd">—</div></div>
+  </div>
+</div>
+
+<!-- MOOD -->
+<div id="pg-mood" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Mood Tracker</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">How you <em style="color:var(--terra);font-style:italic;">actually feel.</em></h1></div>
+  <div class="sec">
+    <div class="stl">Log Today</div>
+    <div class="mood-today">
+      <h3>How are you feeling? <span id="mood-date-lbl" style="color:var(--mut)"></span></h3>
+      <div class="mood-btns">
+        <button class="mbtn" onclick="selMood(5,this)">😌<span>Grounded</span></button>
+        <button class="mbtn" onclick="selMood(4,this)">🙂<span>Good</span></button>
+        <button class="mbtn" onclick="selMood(3,this)">😐<span>Neutral</span></button>
+        <button class="mbtn" onclick="selMood(2,this)">😔<span>Low</span></button>
+        <button class="mbtn" onclick="selMood(1,this)">😞<span>Rough</span></button>
+      </div>
+      <div class="mood-note-row">
+        <input class="inp" type="text" id="mood-note" placeholder="One line — what's on your mind..." style="flex:1">
+        <button class="btn" onclick="saveMood()">Log</button>
+      </div>
+    </div>
+  </div>
+  <div class="sec"><div class="stl">Last 14 Days</div><div class="mood-chart-wrap"><canvas id="moodChart" height="110"></canvas></div></div>
+  <div class="sec"><div class="stl">History</div><div class="mood-history" id="mood-hist"></div></div>
+</div>
+
+<!-- HOROSCOPE -->
+<div id="pg-horoscope" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Horoscope Tracker</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">♑ Capricorn · <em style="color:var(--pup);font-style:italic;">read the stars.</em></h1></div>
+  <div class="sec">
+    <div class="stl">Log Today's Horoscope</div>
+    <div class="horo-today">
+      <h3>Daily Spotify Horoscope</h3>
+      <div class="horo-inputs">
+        <div><label>Paste today's horoscope</label><textarea id="h-text" placeholder="Paste from Spotify..."></textarea></div>
+        <div>
+          <label>How accurate was it?</label>
+          <div class="acc-btns">
+            <button class="abtn" onclick="selAcc(5,this)">5 — Uncanny</button>
+            <button class="abtn" onclick="selAcc(4,this)">4 — Very accurate</button>
+            <button class="abtn" onclick="selAcc(3,this)">3 — Somewhat</button>
+            <button class="abtn" onclick="selAcc(2,this)">2 — Off</button>
+            <button class="abtn" onclick="selAcc(1,this)">1 — Way off</button>
+          </div>
+        </div>
+        <div><label>What actually happened (optional)</label><textarea id="h-note" placeholder="Brief note about your day..." style="min-height:55px"></textarea></div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:130px;"><label>Moon Phase</label>
+            <select class="inp" id="h-moon" style="width:100%">
+              <option value="">— Select —</option>
+              <option>🌑 New Moon</option><option>🌒 Waxing Crescent</option><option>🌓 First Quarter</option>
+              <option>🌔 Waxing Gibbous</option><option>🌕 Full Moon</option><option>🌖 Waning Gibbous</option>
+              <option>🌗 Last Quarter</option><option>🌘 Waning Crescent</option>
+            </select>
+          </div>
+          <button class="btn" onclick="saveHoro()" style="height:34px">Log Entry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="stl">Accuracy Stats</div>
+    <div class="horo-stats">
+      <div class="card hstat"><div class="hsn" id="hs-avg">—</div><div class="hsl">Avg Accuracy</div></div>
+      <div class="card hstat"><div class="hsn" id="hs-total">0</div><div class="hsl">Entries</div></div>
+      <div class="card hstat"><div class="hsn" id="hs-fm">—</div><div class="hsl">Full Moon Avg</div></div>
+      <div class="card hstat"><div class="hsn" id="hs-nm">—</div><div class="hsl">New Moon Avg</div></div>
+    </div>
+  </div>
+  <div class="sec"><div class="stl">History</div><div class="horo-list" id="horo-list"></div></div>
+</div>
+
+<!-- GOALS -->
+<div id="pg-goals" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Goals</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">What you're <em style="color:var(--sage);font-style:italic;">building toward.</em></h1></div>
+  <div class="sec">
+    <div class="gadd">
+      <input class="inp" type="text" id="g-title" placeholder="Goal..." style="flex:2;min-width:140px">
+      <select class="inp" id="g-cat"><option value="housing">Housing</option><option value="income">Income</option><option value="tech">Tech</option><option value="personal">Personal</option><option value="health">Health</option></select>
+      <input class="inp" type="date" id="g-due" style="width:130px">
+      <button class="btn" onclick="addGoal()">+ Add</button>
+    </div>
+    <div class="gcats">
+      <div class="gcat on" onclick="fGoals('all',this)">All</div>
+      <div class="gcat" onclick="fGoals('housing',this)">Housing</div>
+      <div class="gcat" onclick="fGoals('income',this)">Income</div>
+      <div class="gcat" onclick="fGoals('tech',this)">Tech</div>
+      <div class="gcat" onclick="fGoals('personal',this)">Personal</div>
+      <div class="gcat" onclick="fGoals('health',this)">Health</div>
+    </div>
+    <div class="glist" id="glist"></div>
+  </div>
+</div>
+
+<!-- SKILLS -->
+<div id="pg-skills" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Skills</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">What you're <em style="color:var(--terra);font-style:italic;">learning.</em></h1></div>
+  <div class="sec">
+    <div class="skadd">
+      <input class="inp" type="text" id="sk-name" placeholder="Skill name..." style="flex:2;min-width:120px">
+      <select class="inp" id="sk-cat"><option>Linux / Kali</option><option>Networking</option><option>Scripting</option><option>Automation</option><option>Web Tools</option><option>Sysadmin</option><option>Other</option></select>
+      <button class="btn" onclick="addSkill()">+ Add</button>
+    </div>
+    <div class="skcats">
+      <div class="skcat on" onclick="fSkills('all',this)">All</div>
+      <div class="skcat" onclick="fSkills('Linux / Kali',this)">Linux / Kali</div>
+      <div class="skcat" onclick="fSkills('Networking',this)">Networking</div>
+      <div class="skcat" onclick="fSkills('Scripting',this)">Scripting</div>
+      <div class="skcat" onclick="fSkills('Automation',this)">Automation</div>
+      <div class="skcat" onclick="fSkills('Web Tools',this)">Web Tools</div>
+      <div class="skcat" onclick="fSkills('Sysadmin',this)">Sysadmin</div>
+    </div>
+    <div class="sklist" id="sklist"></div>
+  </div>
+</div>
+
+<!-- BOOKS -->
+<div id="pg-books" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Reading Log</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">What you <em style="color:var(--sand);font-style:italic;">read.</em></h1></div>
+  <div class="sec">
+    <div class="badd">
+      <input class="inp" type="text" id="b-title" placeholder="Title..." style="flex:2;min-width:110px">
+      <input class="inp" type="text" id="b-author" placeholder="Author..." style="flex:1;min-width:90px">
+      <select class="inp" id="b-status"><option value="reading">Reading</option><option value="done">Finished</option><option value="queue">Queue</option></select>
+      <button class="btn" onclick="addBook()">+ Add</button>
+    </div>
+    <div class="bstats">
+      <div class="card bstat"><div class="bsn" id="bs-r">0</div><div class="bsl">Reading</div></div>
+      <div class="card bstat"><div class="bsn" id="bs-d">0</div><div class="bsl">Finished</div></div>
+      <div class="card bstat"><div class="bsn" id="bs-q">0</div><div class="bsl">Queue</div></div>
+    </div>
+    <div class="bfilt">
+      <div class="bf on" onclick="fBooks('all',this)">All</div>
+      <div class="bf" onclick="fBooks('reading',this)">Reading</div>
+      <div class="bf" onclick="fBooks('done',this)">Finished</div>
+      <div class="bf" onclick="fBooks('queue',this)">Queue</div>
+    </div>
+    <div class="blist" id="blist"></div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div id="pg-journal" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Day One Journal</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">Thoughts & <em style="color:var(--pup);font-style:italic;">observations.</em></h1></div>
+  <div class="sec">
+    <input class="inp jsearch" type="text" id="jsearch" placeholder="Search all entries..." oninput="jSearch()">
+    <div class="jcount" id="jcount"></div>
+    <div id="j-search-results" class="jsearch-results" style="display:none;"></div>
+    <div id="j-weeks"></div>
+  </div>
+</div>
+
+<!-- REFLECTION -->
+<div id="pg-reflect" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Reflection</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">Look at what <em style="color:var(--terra);font-style:italic;">you've built.</em></h1></div>
+  <div class="sec">
+    <div class="stl">Themes & Patterns</div>
+    <div class="tags">
+      <span class="tag">Gratitude</span><span class="tag">Resilience</span><span class="tag">Connection</span>
+      <span class="tag">Grief carried forward</span><span class="tag">Stability (seeking)</span>
+      <span class="tag">Intentional growth</span><span class="tag">Discomfort with success</span>
+      <span class="tag">Presence</span><span class="tag">Loyalty</span><span class="tag">Full moons 🌕</span>
+    </div>
+    <div class="th4" style="margin-bottom:7px">Core Tensions</div>
+    <div class="ti ten">You lost your mom and became homeless in the same year — and came out more relationally capable, not less.</div>
+    <div class="ti ten">You're doing better with people while unhoused than ever before — and that makes you uncomfortable.</div>
+    <div class="ti ten" style="margin-bottom:16px">Your intellectual life is rich but disconnected from your material life. That gap may be the thing to close.</div>
+    <div class="th4" style="margin-bottom:7px">Momentum</div>
+    <div class="ti flow">→ Three income streams active this month.</div>
+    <div class="ti flow">→ Relationships: unusually good at people. Portable and real.</div>
+    <div class="ti flow">→ Dad Kenny: weekend anchor. His birthday is Mar 22.</div>
+    <div class="ti blk">↳ Housing: still unresolved. Everything else waits here.</div>
+    <div class="ti blk">↳ Income: improving but still largely call-dependent.</div>
+  </div>
+  <div class="sec">
+    <div class="stl">Reflection Prompts</div>
+    <div class="prms">
+      <div class="prm">You lost your mom and became homeless in the same year. What did 2023 take from you — and what did it force you to become?</div>
+      <div class="prm">What is it about being homeless that makes you better with women — and what does that tell you about who you are when you're not trying to perform stability?</div>
+      <div class="prm">That place — 35.4571326, -97.5053227 — what did it give you that people couldn't? Do you still carry that thing?</div>
+      <div class="prm">Baby Klyde. You love a kid that isn't yours. What does that say about what you want your life to hold?</div>
+      <div class="prm">If stability arrived tomorrow — place to sleep, steady income — what's the first thing you'd build?</div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="stl">Next Steps</div>
+    <div class="stps">
+      <div class="stp"><div class="spn">01</div><div class="spt"><strong>Housing first.</strong> OKC transitional housing. Ask a librarian.</div></div>
+      <div class="stp"><div class="spn">02</div><div class="spt"><strong>Plasma 2nd donation.</strong> $75 available before week resets Monday.</div></div>
+      <div class="stp"><div class="spn">03</div><div class="spt"><strong>Keep Express and InstaWork active.</strong> Both are schedule-based — that's the shift.</div></div>
+      <div class="stp"><div class="spn">04</div><div class="spt"><strong>Dad Kenny's birthday — March 22.</strong> Six days. You know what to do.</div></div>
+      <div class="stp"><div class="spn">05</div><div class="spt"><strong>April 3 — take Dad to his procedure.</strong> He needs you there.</div></div>
+    </div>
+  </div>
+  <div class="foot">Life Path · Born May 12 1995 · Oklahoma City · This is yours.</div>
+</div>
+
+
+<!-- DATA TOOLBAR -->
+<div class="data-toolbar">
+  <button onclick="exportData()" title="Export all your data to a backup file">⬇ Export</button>
+  <button class="import-btn" title="Restore from a backup file">
+    ⬆ Import
+    <input type="file" accept=".json" onchange="importData(event)">
+  </button>
+</div>
+<div class="toast" id="toast"></div>
+
+</div><!-- /main -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// NAV
+function gt(id,el){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  el.classList.add('on');
+}
+
+// RADAR — init after page + chart.js fully loaded
+function initRadar(){
+  if(typeof Chart === 'undefined'){setTimeout(initRadar, 100); return;}
+  new Chart(document.getElementById('radarChart').getContext('2d'),{
+  type:'radar',
+  data:{labels:['Health','Work','Finance','Relationships','Growth','Goals','Creativity','Inner Life'],
+    datasets:[{data:[5,5,4,8,7,5,6,7],
+      backgroundColor:'rgba(194,103,58,.06)',borderColor:'rgba(194,103,58,.5)',
+      borderWidth:1.5,pointBackgroundColor:'rgba(194,103,58,.8)',pointRadius:3,pointHoverRadius:5}]},
+  options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{min:0,max:10,
+    ticks:{display:false},grid:{color:'rgba(255,255,255,.04)'},
+    angleLines:{color:'rgba(255,255,255,.04)'},
+    pointLabels:{color:'#6b5f4a',font:{family:'JetBrains Mono',size:9}}}}}
+  });
+}
+initRadar();
+
+// FINANCE
+function uf(){
+  const cash=parseFloat(document.getElementById('i-cash').value);
+  const d1=document.getElementById('cb1').checked;
+  const d2=document.getElementById('cb2').checked;
+  if(!isNaN(cash)) document.getElementById('cash-d').textContent='$'+cash.toFixed(0);
+  let pt=0,pc=0;
+  if(d1){pt+=40;pc++;} if(d2){pt+=75;pc++;}
+  document.getElementById('wk-p').textContent='$'+pt;
+  document.getElementById('wk-pc').textContent=pc+' of 2 done';
+  const a=document.getElementById('wk-alrt');
+  if(d1&&d2){a.className='alrt ok';a.innerHTML='<strong>✓ Full week:</strong> Both donations — $115 plasma this week.';}
+  else if(d1){a.className='alrt';a.innerHTML='<strong>⚠ Plasma #1 done ($40).</strong> 2nd donation ($75) still available this week.';}
+  else{a.className='alrt';a.innerHTML='<strong>⚠ No plasma logged.</strong> Week resets Monday.';}
+}
+
+// CALENDAR
+const TODAY=new Date(2026,2,19);
+let cY=2026,cM=2;
+const EV={};
+function ae(y,m,d,l,c){const k=`${y}-${m}-${d}`;if(!EV[k])EV[k]=[];EV[k].push({l,c});}
+ae(2026,1,28,'🚶 Dad','ed'); ae(2026,2,1,'🚶 Dad','ed'); ae(2026,2,2,'🚶 Dad','ed');
+ae(2026,2,1,'🩸 $75','ep2'); ae(2026,2,3,'🌕 Worm Moon','emn');
+ae(2026,2,6,'🩸 $40','ep1'); ae(2026,2,7,'💰 Nick $100','ew');
+ae(2026,2,9,'💰 Nick $45','ew'); ae(2026,2,12,'💰 Nick $40','ew');
+ae(2026,2,13,'🩸 $40','ep1'); ae(2026,2,13,'💼 InstaWork $60','ew');
+ae(2026,2,14,'💰 Nick $95','ew'); ae(2026,2,14,'💍 Krista anniv','eanniv');
+ae(2026,2,15,'🏠 Dad $60','ed'); ae(2026,2,18,'💼 Express $120','ew');
+ae(2026,2,18,'🎂 Kyle B.','eb'); ae(2026,2,22,'🎂 Dad Kenny','eb');
+ae(2026,3,1,'🌕 Pink Moon','emn'); ae(2026,3,3,'🏥 Dad procedure','ed');
+ae(2026,3,16,'🎂 Kayoas','eb'); ae(2026,3,26,'🎂 Angie','eb'); ae(2026,3,28,'🎂 Dustin','eb');
+ae(2026,4,1,'🌕 Flower Moon','emn');
+ae(2026,4,12,'🎂 Your 31st','eb');
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function renderCal(){
+  document.getElementById('clbl').textContent=MN[cM]+' '+cY;
+  const g=document.getElementById('cal'); g.innerHTML='';
+  const first=new Date(cY,cM,1).getDay(), days=new Date(cY,cM+1,0).getDate();
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cday mt';g.appendChild(e);}
+  for(let d=1;d<=days;d++){
+    const cell=document.createElement('div');
+    const isT=(cY===2026&&cM===2&&d===16);
+    const k=`${cY}-${cM}-${d}`, evs=EV[k]||[];
+    const hasB=evs.some(e=>e.c==='eb'), hasA=evs.some(e=>e.c==='eanniv');
+    cell.className='cday'+(isT?' today':'')+(hasB?' bday':'')+(hasA?' anniv':'');
+    const dn=document.createElement('div');dn.className='dnum';dn.textContent=d;cell.appendChild(dn);
+    evs.forEach(ev=>{const t=document.createElement('div');t.className='cev '+ev.c;t.textContent=ev.l;cell.appendChild(t);});
+    const dateStr=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if(ROOF[dateStr]){const dot=document.createElement('div');dot.className='roof-dot '+(ROOF[dateStr]==='roof'?'r':'n');cell.appendChild(dot);}
+    // Click to open day modal
+    cell.style.cursor='pointer';
+    cell.addEventListener('click', function(){ openDayModal(dateStr, evs); });
+    g.appendChild(cell);
+  }
+  const mon=new Date(2026,2,9); let pc=0,pt=0;
+  for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);
+    const k=`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    if(EV[k])EV[k].forEach(e=>{if(e.c==='ep1'){pc++;pt+=40;}if(e.c==='ep2'){pc++;pt+=75;}});}
+  const sun=new Date(2026,2,15);
+  document.getElementById('wsp').textContent='$'+pt;
+  document.getElementById('wsc').textContent=pc+' / 2';
+  document.getElementById('wsd').textContent=Math.max(0,Math.ceil((sun-TODAY)/86400000));
+  updateRoofStats();
+}
+function pM(){cM--;if(cM<0){cM=11;cY--;}renderCal();}
+function nM(){cM++;if(cM>11){cM=0;cY++;}renderCal();}
+
+// ROOF
+let ROOF={};try{ROOF=JSON.parse(localStorage.getItem('lp_roof')||'{}');}catch(e){}
+function logRoof(type){
+  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+  const ykey=yesterday.toISOString().slice(0,10);
+  ROOF[ykey]=type;
+  try{localStorage.setItem('lp_roof',JSON.stringify(ROOF));}catch(e){}
+  document.getElementById('rbtn-roof').classList.toggle('sel',type==='roof');
+  document.getElementById('rbtn-noroof').classList.toggle('sel',type==='noRoof');
+  document.getElementById('roof-today-lbl').textContent=type==='roof'?'✓ Roof logged':'✓ Outside logged';
+  updateRoofStats();renderCal();
+}
+function updateRoofStats(){
+  const now=new Date();
+  const mk=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  let rn=0,nn=0;
+  Object.entries(ROOF).forEach(([date,val])=>{if(date.startsWith(mk)){if(val==='roof')rn++;else nn++;}});
+  const total=rn+nn;
+  document.getElementById('roof-count').textContent=rn;
+  document.getElementById('noroof-count').textContent=nn;
+  document.getElementById('roof-pct').textContent=total?Math.round((rn/total)*100)+'%':'—';
+  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+  const ykey=yesterday.toISOString().slice(0,10);
+  const last=ROOF[ykey];
+  document.getElementById('rbtn-roof').classList.toggle('sel',last==='roof');
+  document.getElementById('rbtn-noroof').classList.toggle('sel',last==='noRoof');
+  if(last)document.getElementById('roof-today-lbl').textContent=last==='roof'?'Last night: roof':'Last night: outside';
+}
+renderCal();
+
+// MOOD
+let MOODS=[];try{MOODS=JSON.parse(localStorage.getItem('lp_moods')||'[]');}catch(e){}
+let selMoodVal=0;
+const MOOD_MAP={5:{e:'😌',l:'Grounded'},4:{e:'🙂',l:'Good'},3:{e:'😐',l:'Neutral'},2:{e:'😔',l:'Low'},1:{e:'😞',l:'Rough'}};
+function selMood(v,el){selMoodVal=v;document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function saveMood(){
+  if(!selMoodVal){return;}
+  const note=document.getElementById('mood-note').value.trim();
+  const today=new Date().toISOString().slice(0,10);
+  MOODS.unshift({date:today,mood:selMoodVal,note});
+  try{localStorage.setItem('lp_moods',JSON.stringify(MOODS));}catch(e){}
+  document.getElementById('mood-note').value='';
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sel'));
+  selMoodVal=0;renderMood();
+}
+function renderMood(){
+  document.getElementById('mood-date-lbl').textContent='· '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const hist=document.getElementById('mood-hist');
+  if(!MOODS.length){hist.innerHTML='<div class="empty">No entries yet.</div>';updateMoodChart([]);return;}
+  hist.innerHTML='';
+  MOODS.slice(0,30).forEach(m=>{
+    const mm=MOOD_MAP[m.mood]||{e:'😐',l:'?'};
+    const div=document.createElement('div');div.className='mhi';
+    div.innerHTML=`<div class="mhi-emoji">${mm.e}</div><div class="mhi-info"><div class="mhi-date">${m.date} · ${mm.l}</div>${m.note?`<div class="mhi-note">${m.note}</div>`:''}</div>`;
+    hist.appendChild(div);
+  });
+  updateMoodChart(MOODS.slice(0,14).reverse());
+}
+function updateMoodChart(data){
+  if(typeof Chart === 'undefined'){setTimeout(()=>updateMoodChart(data),100);return;}
+  const ctx=document.getElementById('moodChart').getContext('2d');
+  if(window._moodChart)window._moodChart.destroy();
+  if(!data.length){ctx.clearRect(0,0,9999,9999);return;}
+  window._moodChart=new Chart(ctx,{type:'line',
+    data:{labels:data.map(m=>m.date.slice(5)),
+      datasets:[{data:data.map(m=>m.mood),borderColor:'rgba(194,103,58,.7)',backgroundColor:'rgba(194,103,58,.07)',tension:.3,pointRadius:4,pointBackgroundColor:'rgba(194,103,58,.9)',fill:true}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{y:{min:0,max:5,ticks:{stepSize:1,color:'#6b5f4a',font:{family:'JetBrains Mono',size:9}},grid:{color:'rgba(255,255,255,.04)'}},
+        x:{ticks:{color:'#6b5f4a',font:{family:'JetBrains Mono',size:9}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+}
+renderMood();
+
+// HOROSCOPE
+let HOROS=[];try{HOROS=JSON.parse(localStorage.getItem('lp_horos')||'[]');}catch(e){}
+let selAccVal=0;
+function selAcc(v,el){selAccVal=v;document.querySelectorAll('.abtn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function saveHoro(){
+  if(!selAccVal){return;}
+  const text=document.getElementById('h-text').value.trim();
+  const note=document.getElementById('h-note').value.trim();
+  const moon=document.getElementById('h-moon').value;
+  HOROS.unshift({date:new Date().toISOString().slice(0,10),text,note,acc:selAccVal,moon});
+  try{localStorage.setItem('lp_horos',JSON.stringify(HOROS));}catch(e){}
+  document.getElementById('h-text').value='';document.getElementById('h-note').value='';document.getElementById('h-moon').value='';
+  document.querySelectorAll('.abtn').forEach(b=>b.classList.remove('sel'));selAccVal=0;renderHoro();
+}
+const ACC_LBL={5:'Uncanny',4:'Very accurate',3:'Somewhat',2:'Off',1:'Way off'};
+const ACC_CLS={5:'acc-5',4:'acc-4',3:'acc-3',2:'acc-2',1:'acc-1'};
+function renderHoro(){
+  if(!HOROS.length){
+    ['hs-avg','hs-total','hs-fm','hs-nm'].forEach(id=>document.getElementById(id).textContent=id==='hs-total'?'0':'—');
+    document.getElementById('horo-list').innerHTML='<div class="empty">No entries yet — log today’s horoscope above.</div>';return;
+  }
+  const avg=(HOROS.reduce((s,h)=>s+h.acc,0)/HOROS.length).toFixed(1);
+  const fm=HOROS.filter(h=>h.moon&&h.moon.includes('Full'));
+  const nm=HOROS.filter(h=>h.moon&&h.moon.includes('New'));
+  document.getElementById('hs-avg').textContent=avg+'/5';
+  document.getElementById('hs-total').textContent=HOROS.length;
+  document.getElementById('hs-fm').textContent=fm.length?(fm.reduce((s,h)=>s+h.acc,0)/fm.length).toFixed(1)+'/5':'—';
+  document.getElementById('hs-nm').textContent=nm.length?(nm.reduce((s,h)=>s+h.acc,0)/nm.length).toFixed(1)+'/5':'—';
+  const list=document.getElementById('horo-list');list.innerHTML='';
+  HOROS.forEach(h=>{
+    const card=document.createElement('div');card.className='hcard';
+    card.innerHTML=`<div class="hcard-top"><div><div class="hcard-date">${h.date}</div>${h.moon?`<div class="moon-phase-row">${h.moon}</div>`:''}</div><div class="hcard-acc ${ACC_CLS[h.acc]||''}">${h.acc}/5 — ${ACC_LBL[h.acc]||''}</div></div>${h.text?`<div class="hcard-text">"${h.text.slice(0,200)}${h.text.length>200?'…':''}"</div>`:''} ${h.note?`<div class="hcard-note">${h.note}</div>`:''}`;
+    list.appendChild(card);
+  });
+}
+renderHoro();
+
+// GOALS
+let GOALS=[];try{GOALS=JSON.parse(localStorage.getItem('lp_goals')||'[]');}catch(e){}
+let gFilter='all';
+const G_CLS={housing:'gp-housing',income:'gp-income',tech:'gp-tech',personal:'gp-personal',health:'gp-health'};
+const G_LBL={housing:'Housing',income:'Income',tech:'Tech',personal:'Personal',health:'Health'};
+function savG(){try{localStorage.setItem('lp_goals',JSON.stringify(GOALS));}catch(e){}}
+function addGoal(){const t=document.getElementById('g-title').value.trim();if(!t)return;GOALS.push({id:Date.now(),title:t,cat:document.getElementById('g-cat').value,due:document.getElementById('g-due').value,done:false});savG();document.getElementById('g-title').value='';document.getElementById('g-due').value='';renderGoals();}
+function togGoal(id){const g=GOALS.find(x=>x.id===id);if(g){g.done=!g.done;savG();renderGoals();}}
+function delGoal(id){GOALS=GOALS.filter(x=>x.id!==id);savG();renderGoals();}
+function fGoals(cat,el){gFilter=cat;document.querySelectorAll('.gcat').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderGoals();}
+function renderGoals(){
+  const list=document.getElementById('glist');
+  const f=gFilter==='all'?GOALS:GOALS.filter(g=>g.cat===gFilter);
+  if(!f.length){list.innerHTML='<div class="empty">No goals yet.</div>';return;}
+  list.innerHTML='';
+  [...f.filter(g=>!g.done),...f.filter(g=>g.done)].forEach(g=>{
+    const div=document.createElement('div');div.className='card gitem'+(g.done?' done':'');
+    div.innerHTML=`<input type="checkbox" class="gchk" ${g.done?'checked':''} onchange="togGoal(${g.id})"><div class="ginfo"><div class="gtitle${g.done?' done':''}">${g.title}</div><div class="gmeta"><span class="pill ${G_CLS[g.cat]||''}">${G_LBL[g.cat]||g.cat}</span>${g.due?' · Due '+g.due:''}</div></div><button class="del" onclick="delGoal(${g.id})">×</button>`;
+    list.appendChild(div);
+  });
+}
+renderGoals();
+
+// SKILLS
+let SKILLS=[];try{SKILLS=JSON.parse(localStorage.getItem('lp_skills')||'[]');}catch(e){}
+let skFilter='all';
+const LVS=['Beginner','Basic','Intermediate','Proficient','Advanced'];
+function savSk(){try{localStorage.setItem('lp_skills',JSON.stringify(SKILLS));}catch(e){}}
+function addSkill(){const n=document.getElementById('sk-name').value.trim();if(!n)return;if(SKILLS.find(s=>s.name.toLowerCase()===n.toLowerCase()))return;SKILLS.push({id:Date.now(),name:n,cat:document.getElementById('sk-cat').value,level:0});savSk();document.getElementById('sk-name').value='';renderSkills();}
+function setLv(id,lv){const s=SKILLS.find(x=>x.id===id);if(s){s.level=lv;savSk();renderSkills();}}
+function delSkill(id){SKILLS=SKILLS.filter(x=>x.id!==id);savSk();renderSkills();}
+function fSkills(cat,el){skFilter=cat;document.querySelectorAll('.skcat').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderSkills();}
+function renderSkills(){
+  const list=document.getElementById('sklist');
+  const f=skFilter==='all'?SKILLS:SKILLS.filter(s=>s.cat===skFilter);
+  if(!f.length){list.innerHTML='<div class="empty">No skills tracked yet.</div>';return;}
+  list.innerHTML='';
+  f.forEach(s=>{
+    const pct=(s.level/4)*100;const card=document.createElement('div');card.className='card skcard';
+    const btns=LVS.map((l,i)=>`<button class="slb${s.level===i?' on':''}" onclick="setLv(${s.id},${i})">${l}</button>`).join('');
+    card.innerHTML=`<div class="skh"><div><div class="skname">${s.name}</div><div class="skcat2">${s.cat}</div></div><button class="del" onclick="delSkill(${s.id})">×</button></div><div class="skbw"><div class="skb"><div class="skbf" style="width:${pct}%"></div></div><div class="sklv">${LVS[s.level]}</div></div><div class="skbtns">${btns}</div>`;
+    list.appendChild(card);
+  });
+}
+renderSkills();
+
+// BOOKS
+let BOOKS=[];try{BOOKS=JSON.parse(localStorage.getItem('lp_books')||'[]');}catch(e){}
+let bFilter='all';
+const BS_CLS={reading:'bs-reading',done:'bs-done',queue:'bs-queue'};
+const BS_LBL={reading:'Reading',done:'Finished',queue:'Queue'};
+function savBk(){try{localStorage.setItem('lp_books',JSON.stringify(BOOKS));}catch(e){}}
+function addBook(){const t=document.getElementById('b-title').value.trim();if(!t)return;BOOKS.unshift({id:Date.now(),title:t,author:document.getElementById('b-author').value.trim(),status:document.getElementById('b-status').value,rating:0});savBk();document.getElementById('b-title').value='';document.getElementById('b-author').value='';renderBooks();}
+function setRat(id,r){const b=BOOKS.find(x=>x.id===id);if(b){b.rating=r;savBk();renderBooks();}}
+function setBSt(id,s){const b=BOOKS.find(x=>x.id===id);if(b){b.status=s;savBk();renderBooks();}}
+function delBook(id){BOOKS=BOOKS.filter(x=>x.id!==id);savBk();renderBooks();}
+function fBooks(s,el){bFilter=s;document.querySelectorAll('.bf').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderBooks();}
+function renderBooks(){
+  document.getElementById('bs-r').textContent=BOOKS.filter(b=>b.status==='reading').length;
+  document.getElementById('bs-d').textContent=BOOKS.filter(b=>b.status==='done').length;
+  document.getElementById('bs-q').textContent=BOOKS.filter(b=>b.status==='queue').length;
+  const f=bFilter==='all'?BOOKS:BOOKS.filter(b=>b.status===bFilter);
+  const list=document.getElementById('blist');
+  if(!f.length){list.innerHTML='<div class="empty">No books in this category.</div>';return;}
+  list.innerHTML='';
+  f.forEach(b=>{
+    const stars=[1,2,3,4,5].map(i=>`<span style="cursor:pointer;color:${i<=b.rating?'var(--sand)':'var(--mut)'}" onclick="setRat(${b.id},${i})">${i<=b.rating?'★':'☆'}</span>`).join('');
+    const card=document.createElement('div');card.className='card bcard';
+    card.innerHTML=`<div class="btitle">${b.title}</div>${b.author?`<div class="bauthor">${b.author}</div>`:''}<div class="brow"><select class="bsel" onchange="setBSt(${b.id},this.value)"><option value="reading"${b.status==='reading'?' selected':''}>Reading</option><option value="done"${b.status==='done'?' selected':''}>Finished</option><option value="queue"${b.status==='queue'?' selected':''}>Queue</option></select><span class="brating">${stars}</span><button class="del" onclick="delBook(${b.id})">×</button></div>`;
+    list.appendChild(card);
+  });
+}
+renderBooks();
+
+// JOURNAL
+
+const JOURNAL_WEEKS = [
+  {
+    wk:"2026-03-09",
+    label:`Week of March 9 – March 15, 2026`,
+    summary:`Three words and a coordinate. That was one entry. Another was a spiritual closing — you left the park, came back, $22.27 in Uber fees, 'As Above So Below.' Something ended that week. The gratitude log came in Friday: good terms with both exes, able body and mind, your hardships. You went to see Gabby. That was a highlight.`,
+    days:[
+      {
+        date:"2026-03-13",
+        entries:[
+          {title:`Weekly Gratitude`,body:`###### What am I grateful for this week?
+- Being on good terms with the last two relationships I've been in
+- Being of able body and mind
+- My hardships
+
+###### Highlights of this past week
+- Going to see Gabby
+- 
+- 
+
+###### Who made a difference in my life this week?
+
+###### Next week, I look forward to:`},
+        ]
+      },
+      {
+        date:"2026-03-11",
+        entries:[
+          {title:`That Part Of My Life Needs To Belong To The Past`,body:`That was a very spiritual ending, capstone, nail in the coffin yet
+
+As Above So Below. I left this park at 11:07am I returned back at 10:10pm for a total of $22.27 in Uber fee's.`},
+        ]
+      },
+      {
+        date:"2026-03-09",
+        entries:[
+          {title:`**35.4571326, -97.5053227`,body:`This place was here for me when I had nothing and nobody, not even "Sarah".`},
+        ]
+      },
+    ]
+  },
+  {
+    wk:"2026-03-02",
+    label:`Week of March 2 – March 8, 2026`,
+    summary:`The post-Krista static. You texted her after seeing a Facebook post. She texted back — some song lyric about sunshine, then a line that felt like she was poking fun at you being homeless. You weren't sure. You chose to give her an A+ for delivery and move on. Resilience was your word for 2026. You wrote that down.`,
+    days:[
+      {
+        date:"2026-03-07",
+        entries:[
+          {title:`What word or phrase will define my 2026?`,body:`Resilience`},
+          {title:`Not Asleep - Despite Exhaustion🪄`,body:`Krista texted me last night, along with Kayos. He wanted to see if I was mobile.... Yeah whatever dude. Krista texted me this:
+> "🎶 "There ain't no sunshine when she's gone" 🎶 
+> Well, after my daily sunshine wasn't here I had to substitute it from somewhere 🤷‍♀️
+>
+> .. too corny? 😅
+
+
+I gave her an A+ for delivery. It was the next statement that.... Hurt me.
+> I'm honestly surprised you're not asleep because I know you've got to be exhausted.
+
+
+There is the possibility I'm taking it wrong. However it made me feel like she's poking fun at me being homeless. She takes a certain joy in hurting me. I can't control what she does or who she does it with. I know I'm the Man my Mom raised me to be. I forgive her even if she isn't sorry. She wasn't raised to have the faculties of self respect or just respect in general even though I believe her soul does strive for it.
+I'm at work with Nick and his son currently so I'm gonna do what I can to put in a hard day of work and be grateful for everything I have experienced in life!
+
+Krista updated me on what she meant
+> Lol I was hoping you'd ask why I would think that... cause you've been running through my mind all day 🤣😅`},
+        ]
+      },
+      {
+        date:"2026-03-06",
+        entries:[
+          {title:`"WATER You Talking About?"`,body:`Is all I was thinking trying to read through Krista's text messages today.`},
+        ]
+      },
+      {
+        date:"2026-03-04",
+        entries:[
+          {title:`I Texted Krista Last Night`,body:`I seen on Facebook she posted saying how someone she was close with used to say hurt people hurt people and that she was sorry for things she has said before. I wasn't named in the post of course and yeah it could be to multiple people there is no telling. I used ChatGPT to guide me through the best thing to do based on what I want. 
+Her response we will get to....`},
+        ]
+      },
+    ]
+  },
+  {
+    wk:"2026-02-23",
+    label:`Week of February 23 – March 1, 2026`,
+    summary:`The hardest week in the journal. 7.5 miles in 11 hours 45 minutes. Hips hurting. 26 degrees coming Sunday. You wrote 'just stay alive until Tuesday' like it was a plan. And then Tuesday came and you made it. By week's end you were at your dad's, laughing about what Krista said drunk, one week out and already building a new routine.`,
+    days:[
+      {
+        date:"2026-02-28",
+        entries:[
+          {title:`A Week \\& One Day🏞️`,body:`Since I left Krista's. I do still miss the kids but it's slowly getting easier as I get back into a new routine. What am I homeless for this time? Not why. What, what is the experience preparing me for now?
+One year ago today if I told myself where I'm sitting now it wouldn't surprise me a bit (downtown on a park bench reading books) but if I told you everything that happened in between id distrust your work as a fortune teller and take it personal.
+
+I loved 2 women last year, and I have to believe during that time they each gave me as much of love as they could. They let me sleep in their bed, take care of their children, and do their dishes. I am a liar and coward to ever talk badly on their names. To love someone is also pain. Would you be mad or shout insults at whatever you may if while hammering a nail you smash your finger on accident? Yeah I'm not very good at sex, I know how to read, and have bad teeth. But shiiiit they both said how much they appreciated me cleaning🤷
+
+I told my Dad I would be there today so I'll head that way at some point but my ankles hurt so fucking bad. Also I'm gonna make a visual timeline of milestone happenings that have happened since my Mom passed away.`},
+        ]
+      },
+      {
+        date:"2026-02-27",
+        entries:[
+          {title:`"Max, Sometimes I Wish You Were Like Everyone Else..."`,body:`I woke up this morning and have not been able to stop thinking about what Krista said to me while she was blackout drunk, don't worry it's not the mean stuff she was usually saying.
+
+> "Max sometimes I wish you were like the rest of them and would shut the fuck up and just face fuck me already!" - Krista Shipman.
+
+
+God damn I cannot stop laughing about that and a bunch of other stuff, maybe the gravity of the situation has failed to sink in but for the most part I've been in very good spirits. The tops of my ankles hurt so bad from walking so much that yeah I won't be going very far at all today.`},
+        ]
+      },
+      {
+        date:"2026-02-26",
+        entries:[
+          {title:`Made Face w/ Brittany Yesterday😉`,body:`I made face with Brittany Mays yesterday, I'm gonna say she's lieing about talking to Krista recently. That bitch keeps it real tho and I appreciated that more than anything. She said
+> I'm tired of these guys offering to helpe in my situation, then whenever I won't fuck them or suck their dicks they just throw me right back out!`},
+          {title:`A Bed To Sleep In @ My Dad's`,body:`Before I left my Dad's last he asked me if I remember a couple of years ago saying how I didn't want an actual bed to sleep in, and how I wanted it uncomfortable when I slept? Yeah I do remember saying that back when I was living at Kyles.
+Not long ago Krista had brought up the subject of people not sleeping in their own beds. Like how her aunt and uncle don't sleep in their beds and 49orey at the last house with a king size mattress but stays in the living room. Krista said yeah I think it has to do with their mental state, which was wild. 
+I wanted to tell my Dad I not only remembered saying that but wanted to add that every single bed I get to sleep in I promise not a drop of gratitude has been forgotten so far. Every single shower, bowl of cereal, or safe place to sleep among many other things I have not forgotten to be grateful for.
+
+He said in about a month to go ahead and put a mattress topper that hes already bought on to his bed and that I could clear that bed in the spare bedroom off of all those glass bowls so I could have a bed to sleep in when I come over. 
+We'll see, I know how my Dad is.....`},
+        ]
+      },
+      {
+        date:"2026-02-23",
+        entries:[
+          {title:`Nervous About The Cold Nights to Come`,body:`Its Saturday night and I'm sitting here at my Dad's looking at the weather, 31 for the low today, 26 Sunday, 25 Monday, and 44 for the low Tuesday being my only goal to set out for. Just make it outside until Tuesday morning and I should be in the clear.... Just stay alive until Tuesday.
+My boss nick called me today asking if I could work tomorrow, he had 2-3 hours of stuff that needed to be done for one of his regular people so I'm supposed to meet him at 10:30am tomorrow morning. After that I really don't know what I'm gonna do I may try and spend 11one more night at my Dad's.
+I have not disclosed the separation of myself from Krista and the kids yet to anyone.`},
+          {title:`Last Night Was Rough`,body:`I'm hurting really bad in my hips, I walked 7.5 miles in 11 hours \\& 45 minutes. I'm homeless again. Alone again. 
+With tears in my eyes I know I'm not worthless, I know I'm not useless.
+Once I buy a sleeping bag I know that's the point of no return.`},
+        ]
+      },
+    ]
+  },
+  {
+    wk:"2026-02-16",
+    label:`Week of February 16 – February 22, 2026`,
+    summary:`Marcus Aurelius at Myriad Gardens. That's a real image. Krista made actual plans for the first time — asked you to go to your dad's so Brandon could stay. You called it abrasive but appreciated it. Then Kyra called you her step-dad on the phone and wrote YIKES in all caps. The week ended with you back outside, Dustin's floor, relationship over.`,
+    days:[
+      {
+        date:"2026-02-22",
+        entries:[
+          {title:`I Want To Go Home🏡`,body:`I just got off work, I went and raked leaves at 4120 house, It's that house on the north side that I've been to before back when to sell drugs to that guy who hadn't left the house in like 8 years. It's always a pivotal time in life when I go to work at that house I feel like. It may have been more profitable to go and donate Plasma but I already know chasing prophets won't suffice for what I desire. 
+If I don't have anybody to provide for, protect, or love. All I have is myself and why I won't provide those things for myself... I couldn't tell ya.`},
+        ]
+      },
+      {
+        date:"2026-02-21",
+        entries:[
+          {title:`Back Outside 💔`,body:`I'm laying here at Dustin's for the night. She brought her brother over along with Brandon in order to humiliate me into leaving. It was not fun I woke up the next day and started drinking at 7:30am, after I had to yell at her to wake up because the principal of Alex's school was calling. She was going to lie but was honest that night about the fact she didn't go and shadow Alex in class all day. He is suspended untill Krista can be up there with him at school for a day. She tried to go today but was so late to an already half day at school. 
+
+None of that is my concern any more. It always slaps when women tell me that. "It doesn't concern you any more!" But they aren't wrong. 
+I feel for the kids though, they deserve a better Krista.
+She wants to sell drugs and fuck. So be it, to each their own.`},
+          {title:`What decision most shaped who I am today?`,body:`The decision to love someone I think was made possible from my asking of the universe for someone to love with the understanding I can't ask for someone to just love me. 
+Krista just couldn't any more. Couldn't maintain the daily routine of life and felt alone is what I'm taking from what happened. Couldn't or wouldn't keep lieing to me about who she is and how she feels. Not that she would lie about she feels but blow up on me and loose her temper pushing me away any time that her emotions were the topic at hand.`},
+        ]
+      },
+      {
+        date:"2026-02-19",
+        entries:[
+          {title:`What small moment recently made me feel loved?`,body:`Kyra was on the phone with her friend, and refereed to me as her "Step Dad"! YIKES..... I certainly don't think of myself with that title but that's cool someone does. And yeah I certainly try in that field.`},
+        ]
+      },
+      {
+        date:"2026-02-18",
+        entries:[
+          {title:`Krista came up with "Plans"`,body:`For the first time ever Krista actually said hey make plans to go to your dad's tomorrow night so Brandon can spend the night.
+
+Very abrasive but fuck.... I appreciate it. It took me a second to figure out what she was saying but I caught on. Every time she leaves the house it takes an hour and a half minimum no matter what or where she's going.... Oh well she said she brought up Brandon going home tonight to me just to be nice lol which means she had a plan of what she was doing with Brandon was doing from the get go.`},
+          {title:`Waiting On My Dad 2 Return`,body:`Speak of the devil and he shall appear.
+He just here.`},
+        ]
+      },
+      {
+        date:"2026-02-16",
+        entries:[
+          {title:`Meditations -Marcus Aurelius Quote`,body:`> How much are political freedoms worth if we are the slaves to false opinions and harmful desires?
+
+
+Sitting here at the Myriad Gardens downtown`},
+        ]
+      },
+    ]
+  },
+  {
+    wk:"2026-02-09",
+    label:`Week of February 9 – February 15, 2026`,
+    summary:`Things were deteriorating. No friends, no problem — you decided isolation was fine, maybe even right. Klyde saved a bad day just by waking up and needing you. Fred knocked on the door. A tweaker named Fred. You were reading the room clearly: Krista was lying, the situation was unraveling, and you were still there.`,
+    days:[
+      {
+        date:"2026-02-13",
+        entries:[
+          {title:`🚪Fred Knocked On The Door🚪`,body:`Krista went to clean an apartment today, nothing wrong with that except her reluctance to leave like she was feeling bad about whatever she was going to do and yeah...... Just lieing to me like an Olympic sport in front of her "friend" Sara.
+When she got back it probably wasnt an hour and I hear a tap on the door. Not a knock a tap, I open the door and if you can imagine the definition of a black tweaker named "Fred" 🤣LOL🤣! Stuck wide eyed like "I'm Fred, do you not remember me?" So I stare him down and he goes for the classic "I think I have the wrong apartment".
+Then I remembered who he was it was that no good black bitch CIA agent that lives in the apartment complex, her cousin. Krista tried buying dope from him one time but I said nah bro I aint paying $20 for that. Not a big deal honestly didn't think shit of it until a couple hours later that same day Im sitting here while Krista walks to the Dollar store and that fucking no good bitch straight up walks in the apartment and starts just chatting it up with the kids. I told her to leave and she slowly backed out the door but WTF that ain't no coincidence.
+
+Krista tried to say it was random but I can't fathom it with the way he just stood there like he was there for a reason. Probably is nothing else just to make me jealous or some shit and yeah it worked just on the principle of her lieing to me so much lately with no regard for me and just to be a bitch on purpose.
+
+
+And there she goes again being a fucking bitch.
+She just opened the front door because just like earlier it sounded like a tap at the front door and it's 11:19pm at night.`},
+          {title:`💭A Thought`,body:`I am the thought.
+She just doesn't give a fuck about anything except not feeling the way she does. Hurt people hurt people is basically what I'm saying and when she feels like I hurt her in some way I feel it for sure. Yesterday leading into today at 1:30am I'm still feeling it.`},
+        ]
+      },
+      {
+        date:"2026-02-11",
+        entries:[
+          {title:`The Bluetooth Connection I Share w/ Klyde`,body:`So yesterday I was telling Krista "hey I'll just be honest with you I'm having a bad day because of that whole bullshit with Kyle you bringing him over." Like I've known him long enough he'll just tell me straight to my face "you know what it is if I show up while you're in a relationship"🤷
+
+As soon as I told her that and I can just see the look of satisfaction in her face along with empowerment it brought her. Been Clyde wakes up and starts crying gave me an outlet a diversion to remember why I'm I guess still here but why I still have a purpose to be here. #Keepingkidssafe`},
+          {title:`What am I looking forward to in February?`,body:`The end of February`},
+        ]
+      },
+      {
+        date:"2026-02-09",
+        entries:[
+          {title:`No Friends, No Prob.....`,body:`I thought about how it sucks not having anybody to hangout with or talk to, in the past I would have tried to reach out or fix broken bonds. Not this go around. Why so, I'm too hurt, I'm sad AF, Krista will turn them. She is the embodiment of Lilith. So yeah regardless of the exact reasoning I don't have any day to day friends to hang out with and that's fine. 
+I was raised around parents that had ZERO friends, parents don't "hang out". And that's the picture I want to convey to Krista's kids. 
+After hearing how desperate Kyle was to hang out weather that be because he's actually longing for a friend or it's just a patch on the shoulder along with I'm fucking your bitch. Doesn't matter. What's best for me and my image is most certainly not idiots who don't care about anything. 
+I saw something on FB that said "your cheating with a man that looks up to your man. Lol wtf" 
+
+# Trying to be in a relationship with Krista has been extremely painful lately, however I'm grateful enough for a roof over my head, a bed to sleep in and a kitchen to make food that I also wouldn't talk bad on Krista's name. I deeply appreciate everything she has brought into my life.💔❤️‍🩹`},
+        ]
+      },
+    ]
+  },
+  {
+    wk:"2026-02-02",
+    label:`Week of February 2 – February 8, 2026`,
+    summary:`A week of friction inside Krista's house — a comment about parenting, Kyle showing up at 11pm, passive aggression running both directions. You were caught between self-respect and the comfort of being inside. You asked yourself when you last felt truly confident and couldn't answer quickly. The tension was building toward something.`,
+    days:[
+      {
+        date:"2026-02-06",
+        entries:[
+          {title:`The Repercussions Of My Actions`,body:`Apparently I made a comment to Krista or something about telling her how to parent the other night, I don't remember what I said but I had come back from my dad's house or somewhere and she was very MANIC. I think I only said something because of how mean she started to be towards Alex not acting right. I do need to keep the small comments like "look how high you can jump" to myself and especially the laughing under my breath type shit, it doesn't help the situation and damn sure only puts me in the dog house.
+Yesterday after she "went to her brother's" after dropping off Alex she did actually sit and talk to me, she acknowledged the aggravation she has expressed any time I try to talk to her or even be in the same room with her. She said yeah I know what your talking about and then brought up I don't need to try and tell her how to parent. This morning she got back in the door at 9am when she took Brandon to work at 7am, Alex is suspended but he was awake and had already pilfered through the room while I was sleeping.
+Of course after 3days awake she finally crashed out. The day previous when I wanted to talk to her that was exactly what I wanted to talk about, "when are you going to sleep?" She told me basically don't worry about it bc it's a NO GO ZONE being told to get some sleep.`},
+          {title:`If I had anywhere to go... I'd Go.`,body:`Yeah I know I showed up at Krista's a rough tough son of a gun, willing to protect my self respect with the simple act of just going back outside.
+But I can't bring myself to do it. Giving myself back Freedom, Freedom to do whatever I want with 100% of my day is basically hitting the self destruct button in my mind. Ive slept alone for well over a week now which has really hurt my feelings, but not bad enough I lose sight of the comfort and benefits that sleeping inside on a real bed brings.`},
+          {title:`When did I last feel truly confident?`,body:`With that question bringing up feelings completely on the opposite spectrum lately I'd have to take some time to think back...`},
+          {title:`Shots Fired!!!** 💥`,body:`Krista had Kyle and Brandon there when I got back from donating plasma. Its 11 pm and she just took them both home...
+I got to smoke a blunt he gave me some weed and Xanax. The truth was cowardice passive aggression in my opinion bc Krista is trying to be mean, get rid of me, payback or all the above and she can't just tell me? Of course not. Kyle got barred out enough to say what he wanted not that him and Krista been doing whatever here lately. From my previous experiences with "people" and my partner. It always has to be a stage performance in order to deal with something like your Grandpa going to an assisted living facility and getting older.
+These people I speak of however do not seem to get older in the fashion of their choices in life. Same thing over and over again. Aurosbo`},
+        ]
+      },
+    ]
+  },
+];
+
+function renderJWeeks(){
+  const container=document.getElementById('j-weeks');container.innerHTML='';
+  JOURNAL_WEEKS.forEach((week,wi)=>{
+    const entryCount=week.days.reduce((s,d)=>s+d.entries.length,0);
+    const wdiv=document.createElement('div');wdiv.className='j-week';
+    const whdr=document.createElement('div');whdr.className='j-week-hdr card';
+    whdr.innerHTML=`<div class="j-week-label">${week.label}</div><div class="j-week-count">${entryCount} entr${entryCount===1?'y':'ies'}</div>${week.summary?`<div class="j-week-summary">${week.summary}</div>`:''}`;
+    const wbody=document.createElement('div');wbody.className='j-week-body'+(wi===0?' show':'');
+    week.days.forEach((day,di)=>{
+      const ddiv=document.createElement('div');ddiv.className='j-day';
+      const dhdr=document.createElement('div');dhdr.className='j-day-hdr card';
+      const dayDate=new Date(day.date+'T12:00:00');
+      dhdr.textContent=dayDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+' — '+day.entries.length+' entr'+(day.entries.length===1?'y':'ies');
+      const dentries=document.createElement('div');dentries.className='j-day-entries'+(wi===0&&di===0?' show':'');
+      day.entries.forEach(e=>{
+        const card=document.createElement('div');card.className='card jcard';
+        card.innerHTML=`<div class="jtitle">${e.title}</div><div class="jbody">${e.body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+        card.addEventListener('click',()=>{
+          const body=card.querySelector('.jbody');const isOpen=body.classList.contains('show');
+          dentries.querySelectorAll('.jcard').forEach(c=>{c.classList.remove('open');c.querySelector('.jbody').classList.remove('show');});
+          if(!isOpen){body.classList.add('show');card.classList.add('open');}
+        });
+        dentries.appendChild(card);
+      });
+      dhdr.addEventListener('click',()=>dentries.classList.toggle('show'));
+      ddiv.appendChild(dhdr);ddiv.appendChild(dentries);wbody.appendChild(ddiv);
+    });
+    whdr.addEventListener('click',(e)=>{if(e.target.closest('.j-day-hdr'))return;wbody.classList.toggle('show');});
+    wdiv.appendChild(whdr);wdiv.appendChild(wbody);container.appendChild(wdiv);
+  });
+  document.getElementById('jcount').textContent=JOURNAL_WEEKS.length+' weeks · '+JOURNAL_WEEKS.reduce((s,w)=>s+w.days.reduce((ss,d)=>ss+d.entries.length,0),0)+' entries';
+}
+function jSearch(){
+  const q=document.getElementById('jsearch').value.trim().toLowerCase();
+  const rd=document.getElementById('j-search-results'),wd=document.getElementById('j-weeks');
+  if(!q){rd.style.display='none';wd.style.display='block';renderJWeeks();return;}
+  wd.style.display='none';rd.style.display='grid';rd.innerHTML='';
+  let hits=0;
+  JOURNAL_WEEKS.forEach(week=>week.days.forEach(day=>day.entries.forEach(e=>{
+    if(e.title.toLowerCase().includes(q)||e.body.toLowerCase().includes(q)){
+      hits++;
+      const card=document.createElement('div');card.className='card jcard';
+      const dl=new Date(day.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      card.innerHTML=`<div class="jcount" style="margin-bottom:4px">${dl}</div><div class="jtitle">${e.title}</div><div class="jbody show">${e.body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+      rd.appendChild(card);
+    }
+  })));
+  document.getElementById('jcount').textContent=hits+' result'+(hits===1?'':'s')+' for "'+q+'"';
+}
+renderJWeeks();
+
+// Animate domain bars
+document.querySelectorAll('.dbf').forEach((b,i)=>{
+  const w=b.style.width;b.style.width='0';
+  setTimeout(()=>{b.style.transition='width .8s ease';b.style.width=w;},60+i*50);
+});
+
+// ── EXPORT / IMPORT ──
+const DATA_KEYS = ['lp_goals','lp_skills','lp_books','lp_moods','lp_horos','lp_roof'];
+
+function exportData() {
+  const backup = {};
+  DATA_KEYS.forEach(function(k) {
+    try { backup[k] = JSON.parse(localStorage.getItem(k) || 'null'); } catch(e) {}
+  });
+  backup._exported = new Date().toISOString();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'life-path-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus('Backup exported');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      let count = 0;
+      DATA_KEYS.forEach(function(k) {
+        if (data[k] !== undefined && data[k] !== null) {
+          localStorage.setItem(k, JSON.stringify(data[k]));
+          count++;
+        }
+      });
+      try { GOALS = JSON.parse(localStorage.getItem('lp_goals') || '[]'); renderGoals(); } catch(err) {}
+      try { SKILLS = JSON.parse(localStorage.getItem('lp_skills') || '[]'); renderSkills(); } catch(err) {}
+      try { BOOKS = JSON.parse(localStorage.getItem('lp_books') || '[]'); renderBooks(); } catch(err) {}
+      try { MOODS = JSON.parse(localStorage.getItem('lp_moods') || '[]'); renderMood(); } catch(err) {}
+      try { HOROS = JSON.parse(localStorage.getItem('lp_horos') || '[]'); renderHoro(); } catch(err) {}
+      try { ROOF = JSON.parse(localStorage.getItem('lp_roof') || '{}'); renderCal(); } catch(err) {}
+      const fromDate = data._exported ? ' — from ' + data._exported.slice(0,10) : '';
+      setStatus('Imported ' + count + ' data sets' + fromDate);
+    } catch(err) {
+      setStatus('Import failed — invalid file');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearData() {
+  if (!confirm('Clear ALL saved data? Goals, skills, books, mood, horoscope, and roof logs will be deleted.')) return;
+  DATA_KEYS.forEach(function(k) { localStorage.removeItem(k); });
+  GOALS = []; SKILLS = []; BOOKS = []; MOODS = []; HOROS = []; ROOF = {};
+  renderGoals(); renderSkills(); renderBooks(); renderMood(); renderHoro(); renderCal();
+  setStatus('All data cleared');
+}
+
+function setStatus(msg) {
+  const el = document.getElementById('data-status');
+  el.textContent = msg;
+  setTimeout(function() { el.textContent = 'Data saved in browser — export to back up'; }, 4000);
+}
+
+// Init status
+document.getElementById('data-status').textContent = 'Data saved in browser — export to back up';
+
+
+// ── DAY MODAL ──
+let _dmDate = null;
+
+function openDayModal(dateStr, evs) {
+  _dmDate = dateStr;
+  const d = new Date(dateStr + 'T12:00:00');
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  document.getElementById('dm-date').textContent = dayNames[d.getDay()] + ' · ' + monthNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  document.getElementById('dm-title').textContent = 'Where did you sleep?';
+
+  // Set button states based on existing log
+  const cur = ROOF[dateStr];
+  document.getElementById('dm-btn-roof').className = 'dm-roof' + (cur === 'roof' ? ' sel' : '');
+  document.getElementById('dm-btn-noroof').className = 'dm-noroof' + (cur === 'noRoof' ? ' sel' : '');
+
+  // Show events for that day
+  const evBox = document.getElementById('dm-events');
+  if (evs && evs.length) {
+    evBox.innerHTML = evs.map(ev => '<div>' + ev.l + '</div>').join('');
+    evBox.style.display = 'block';
+  } else {
+    evBox.style.display = 'none';
+  }
+
+  document.getElementById('day-modal-overlay').classList.add('show');
+}
+
+function setDayRoof(type) {
+  if (!_dmDate) return;
+  if (type === null) {
+    delete ROOF[_dmDate];
+  } else {
+    ROOF[_dmDate] = type;
+  }
+  try { localStorage.setItem('lp_roof', JSON.stringify(ROOF)); } catch(e) {}
+
+  // Update button states
+  document.getElementById('dm-btn-roof').className = 'dm-roof' + (type === 'roof' ? ' sel' : '');
+  document.getElementById('dm-btn-noroof').className = 'dm-noroof' + (type === 'noRoof' ? ' sel' : '');
+
+  updateRoofStats();
+  renderCal();
+}
+
+function closeDayModal(event) {
+  if (event && event.target !== document.getElementById('day-modal-overlay')) return;
+  document.getElementById('day-modal-overlay').classList.remove('show');
+  _dmDate = null;
+}
+
+</script>
+
+<!-- DATA BAR -->
+<div class="data-bar">
+  <span class="data-bar-label">Data</span>
+  <button class="dbtn dbtn-export" onclick="exportData()">↓ Export backup</button>
+  <button class="dbtn dbtn-import" onclick="document.getElementById('import-file').click()">↑ Import backup</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+  <button class="dbtn dbtn-clear" onclick="clearData()">✕ Clear all</button>
+  <span class="data-status" id="data-status"></span>
+</div>
+
+
+<!-- DAY MODAL -->
+<div class="day-modal-overlay" id="day-modal-overlay" onclick="closeDayModal(event)">
+  <div class="day-modal">
+    <div class="day-modal-date" id="dm-date"></div>
+    <div class="day-modal-title" id="dm-title"></div>
+    <div class="day-modal-btns">
+      <button class="dm-roof" id="dm-btn-roof" onclick="setDayRoof('roof')">🏠 Roof</button>
+      <button class="dm-noroof" id="dm-btn-noroof" onclick="setDayRoof('noRoof')">⛺ Outside</button>
+    </div>
+    <button class="dm-clear" onclick="setDayRoof(null)">✕ Clear this day</button>
+    <div class="day-modal-events" id="dm-events"></div>
+    <button class="day-modal-close" onclick="closeDayModal()">Close</button>
+  </div>
+</div>
+
+</body>
+</html>
