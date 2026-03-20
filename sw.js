@@ -1,6 +1,7 @@
 const CACHE_NAME = 'life-path-v1';
 const ASSETS = [
   './',
+
   './life-path-dashboard.html',
   './manifest.webmanifest',
   './icons/life-path-icon-192.svg',
