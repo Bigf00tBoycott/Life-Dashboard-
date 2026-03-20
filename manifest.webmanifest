@@ -2,7 +2,7 @@
   "name": "Life Path Dashboard",
   "short_name": "Life Path",
   "description": "Personal life dashboard with local persistence for finances, mood, roof log, goals, and skills.",
-  "start_url": "./",
+  
   "scope": "./",
   "display": "standalone",
   "background_color": "#13151a",
