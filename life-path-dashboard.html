@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" href="icons/life-path-icon-192.svg">
 <title>Max — Life Path</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 
 <style>
 :root {
@@ -478,6 +479,35 @@ tr:hover td{background:var(--sur2);}
   .day-modal-events{font-size:11px;color:var(--mut);margin-bottom:14px;line-height:1.7;border-top:1px solid var(--bdr);padding-top:12px;}
   .day-modal-events div{margin-bottom:2px;}
 
+  /* GOOGLE MAPS TIMELINE */
+  .map-tools{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;align-items:start;}
+  .map-panel{background:var(--sur);border:1px solid var(--bdr);padding:16px;}
+  .map-drop{border:1px dashed var(--bdr);padding:18px;display:grid;gap:10px;background:rgba(255,255,255,.01);}
+  .map-drop strong{color:var(--txt);font-size:13px;}
+  .map-drop p,.map-hint,.trip-meta,.place-meta,.map-empty{font-size:11px;color:var(--mut);line-height:1.8;}
+  .map-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .map-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;}
+  .map-stat{padding:14px;}
+  .map-stat .label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;}
+  .map-stat .value{font-family:'Fraunces',serif;font-size:28px;line-height:1;font-weight:300;color:var(--terra);}
+  .timeline-map{height:380px;border:1px solid var(--bdr);background:var(--sur2);margin-top:14px;}
+  .map-filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .map-filter-row .inp{min-width:150px;flex:1;}
+  .trip-list,.place-list{display:grid;gap:10px;max-height:580px;overflow:auto;padding-right:4px;}
+  .trip-card,.place-card{padding:14px;cursor:pointer;}
+  .trip-card.active,.place-card.active{border-color:var(--terra);background:var(--sur2);}
+  .trip-title,.place-title{font-size:12px;color:var(--txt);margin-bottom:4px;}
+  .trip-route{font-family:'Fraunces',serif;font-size:18px;line-height:1.2;font-weight:300;color:var(--txt);margin-bottom:8px;}
+  .trip-badges,.place-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+  .mini-pill{display:inline-flex;align-items:center;padding:2px 7px;border:1px solid var(--bdr);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);}
+  .place-title{font-family:'Fraunces',serif;font-size:18px;font-weight:300;}
+  .place-bar{height:6px;border-radius:999px;background:var(--bdr);overflow:hidden;margin-top:8px;}
+  .place-bar > span{display:block;height:100%;background:linear-gradient(90deg,var(--terra),var(--sand));}
+  @media (max-width: 900px){
+    .map-tools{grid-template-columns:1fr;}
+    .timeline-map{height:300px;}
+  }
+
 </style>
 </head>
 <body>
@@ -495,6 +525,7 @@ tr:hover td{background:var(--sur2);}
   <button class="navbtn"     onclick="gt('skills',this)"    data-label="Skills">    <span class="nicon">▲</span><span class="nlbl">Skills</span></button>
   <button class="navbtn"     onclick="gt('books',this)"     data-label="Reading">   <span class="nicon">▭</span><span class="nlbl">Books</span></button>
   <div class="nav-divider"></div>
+  <button class="navbtn"     onclick="gt('maps',this)"      data-label="Maps">      <span class="nicon">⌖</span><span class="nlbl">Maps</span></button>
   <button class="navbtn"     onclick="gt('journal',this)"   data-label="Journal">   <span class="nicon">✦</span><span class="nlbl">Journal</span></button>
   <button class="navbtn"     onclick="gt('reflect',this)"   data-label="Reflection"><span class="nicon">⟳</span><span class="nlbl">Reflect</span></button>
 </nav>
@@ -764,6 +795,49 @@ tr:hover td{background:var(--sur2);}
   </div>
 </div>
 
+<!-- GOOGLE MAPS TIMELINE -->
+<div id="pg-maps" class="pg">
+  <div class="phdr"><div class="phdr-eyebrow">Google Maps Timeline</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">Your movement, <em style="color:var(--terra);font-style:italic;">made visible.</em></h1><div class="phdr-sub">Upload an exported Google Maps Timeline JSON file to explore trips, top places, and route points in-browser only.</div></div>
+  <div class="sec">
+    <div class="stl">Upload Timeline JSON</div>
+    <div class="map-tools">
+      <div class="map-panel">
+        <div class="map-drop">
+          <strong>Supported exports</strong>
+          <p>Works with common Google Maps Timeline JSON structures such as <code>timelineObjects</code>, <code>semanticSegments</code>, and <code>rawSignals</code>. Your file is parsed locally and never uploaded anywhere.</p>
+          <div class="map-actions">
+            <button class="btn" onclick="document.getElementById('timeline-file').click()">Choose JSON file</button>
+            <input type="file" id="timeline-file" accept=".json,application/json" style="display:none" onchange="importTimelineFile(event)">
+            <button class="btn" onclick="clearTimelineData()">Clear map data</button>
+          </div>
+          <div class="map-hint" id="timeline-status">No timeline loaded yet.</div>
+        </div>
+        <div class="map-stats">
+          <div class="card map-stat"><div class="label">Trips</div><div class="value" id="timeline-trip-count">0</div></div>
+          <div class="card map-stat"><div class="label">Places</div><div class="value" id="timeline-place-count">0</div></div>
+          <div class="card map-stat"><div class="label">Distance</div><div class="value" id="timeline-distance">0 mi</div></div>
+          <div class="card map-stat"><div class="label">Date Range</div><div class="value" id="timeline-range" style="font-size:18px">—</div></div>
+        </div>
+        <div class="map-filter-row">
+          <input class="inp" id="timeline-search" type="text" placeholder="Filter by location or activity…" oninput="renderTimelineTrips()">
+          <select class="inp" id="timeline-sort" onchange="renderTimelineTrips()">
+            <option value="recent">Sort: Most recent</option>
+            <option value="longest">Sort: Longest distance</option>
+            <option value="shortest">Sort: Shortest distance</option>
+          </select>
+        </div>
+        <div id="timeline-map" class="timeline-map"></div>
+      </div>
+      <div class="map-panel">
+        <div class="stl" style="margin-bottom:10px;">Trips</div>
+        <div id="trip-list" class="trip-list"><div class="map-empty">Upload a Google Maps Timeline export to populate your trip list.</div></div>
+        <div class="stl" style="margin:18px 0 10px;">Top Places</div>
+        <div id="place-list" class="place-list"><div class="map-empty">Frequent stops will appear here after import.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- SKILLS -->
 <div id="pg-skills" class="pg">
   <div class="phdr"><div class="phdr-eyebrow">Skills</div><h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;">What you're <em style="color:var(--terra);font-style:italic;">learning.</em></h1></div>
@@ -880,6 +954,7 @@ tr:hover td{background:var(--sur2);}
 
 </div><!-- /main -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 // NAV
 function gt(id,el){
@@ -905,6 +980,340 @@ function initRadar(){
   });
 }
 initRadar();
+
+const TIMELINE_STORAGE_KEY='lp_timeline_maps';
+let timelineMap=null;
+let timelineLayerGroup=null;
+let timelineTrips=[];
+let timelinePlaces=[];
+let selectedTripId=null;
+
+function decodePolyline(str){
+  if(!str || typeof str !== 'string') return [];
+  let index=0, lat=0, lng=0, coords=[];
+  while(index<str.length){
+    let result=0, shift=0, byte=0;
+    do{ byte=str.charCodeAt(index++)-63; result|=(byte&0x1f)<<shift; shift+=5; }while(byte>=0x20);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    result=0; shift=0;
+    do{ byte=str.charCodeAt(index++)-63; result|=(byte&0x1f)<<shift; shift+=5; }while(byte>=0x20);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    coords.push([lat / 1e5, lng / 1e5]);
+  }
+  return coords;
+}
+
+function milesFromMeters(meters){
+  return (Number(meters||0) * 0.000621371).toFixed(1);
+}
+
+function prettyDate(value){
+  if(!value) return 'Unknown date';
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+}
+
+function normalizeCoord(lat,lng){
+  const nLat=Number(lat), nLng=Number(lng);
+  if(!Number.isFinite(nLat)||!Number.isFinite(nLng)) return null;
+  return [nLat,nLng];
+}
+
+function parseGoogleCoord(obj){
+  if(!obj || typeof obj !== 'object') return null;
+  if(obj.latitudeE7 !== undefined && obj.longitudeE7 !== undefined){
+    return [Number(obj.latitudeE7)/1e7, Number(obj.longitudeE7)/1e7];
+  }
+  if(obj.lat !== undefined && obj.lng !== undefined) return normalizeCoord(obj.lat,obj.lng);
+  if(obj.latitude !== undefined && obj.longitude !== undefined) return normalizeCoord(obj.latitude,obj.longitude);
+  return null;
+}
+
+function ensureTimelineMap(){
+  if(timelineMap || typeof L === 'undefined') return;
+  timelineMap = L.map('timeline-map',{zoomControl:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,
+    attribution:'&copy; OpenStreetMap contributors'
+  }).addTo(timelineMap);
+  timelineLayerGroup = L.layerGroup().addTo(timelineMap);
+  timelineMap.setView([39.5,-98.35],4);
+}
+
+function buildTripFromSegment(segment, index){
+  const activity = segment.activity || segment.activitySegment || segment;
+  const start = activity.startTime || activity.duration?.startTimestamp;
+  const end = activity.endTime || activity.duration?.endTimestamp;
+  const distanceMeters = activity.distance || activity.distanceMeters || 0;
+  const startCoord = parseGoogleCoord(activity.startLocation || activity.origin || activity.from);
+  const endCoord = parseGoogleCoord(activity.endLocation || activity.destination || activity.to);
+  const polyline = activity.simplifiedRawPath?.points || activity.polyline || activity.encodedPolyline;
+  const path = Array.isArray(activity.waypointPath?.waypoints)
+    ? activity.waypointPath.waypoints.map(parseGoogleCoord).filter(Boolean)
+    : decodePolyline(polyline);
+  const mergedPath = [startCoord, ...path, endCoord].filter(Boolean);
+  return {
+    id:'trip-'+index,
+    title:activity.activityType || activity.activity || 'Trip',
+    start,
+    end,
+    distanceMeters:Number(distanceMeters||0),
+    startName:activity.startLocation?.name || activity.origin?.name || 'Start',
+    endName:activity.endLocation?.name || activity.destination?.name || 'End',
+    startCoord,
+    endCoord,
+    path:mergedPath,
+    source:'segment'
+  };
+}
+
+function buildTripFromObject(item, index){
+  const src = item.activitySegment || item.activity || item;
+  const startCoord = parseGoogleCoord(src.startLocation);
+  const endCoord = parseGoogleCoord(src.endLocation);
+  const path = decodePolyline(src.simplifiedRawPath?.points || src.polyline);
+  return {
+    id:'trip-'+index,
+    title:src.activityType || 'Trip',
+    start:src.duration?.startTimestamp || src.startTime,
+    end:src.duration?.endTimestamp || src.endTime,
+    distanceMeters:Number(src.distance || src.distanceMeters || 0),
+    startName:src.startLocation?.name || 'Start',
+    endName:src.endLocation?.name || 'End',
+    startCoord,
+    endCoord,
+    path:[startCoord, ...path, endCoord].filter(Boolean),
+    source:'timelineObject'
+  };
+}
+
+function extractPlaceVisits(data){
+  const visits = [];
+  const rawVisits = [];
+  if(Array.isArray(data.timelineObjects)){
+    data.timelineObjects.forEach((item)=>{ if(item.placeVisit) rawVisits.push(item.placeVisit); });
+  }
+  if(Array.isArray(data.semanticSegments)){
+    data.semanticSegments.forEach((item)=>{
+      if(item.visit){
+        rawVisits.push({
+          location:item.visit.topCandidate?.placeLocation || item.visit.topCandidate || item.visit,
+          duration:item.visit.duration
+        });
+      }
+    });
+  }
+
+  rawVisits.forEach((visit, index)=>{
+    const loc = visit.location || visit.placeLocation || {};
+    const coord = parseGoogleCoord(loc) || parseGoogleCoord(loc.latLng || {});
+    visits.push({
+      id:'place-'+index,
+      name:loc.name || loc.address || 'Unnamed place',
+      address:loc.address || '',
+      coord,
+      start:visit.duration?.startTimestamp,
+      end:visit.duration?.endTimestamp
+    });
+  });
+
+  const grouped = new Map();
+  visits.forEach((visit)=>{
+    const key = `${visit.name}|${visit.address}|${visit.coord ? visit.coord.join(',') : 'none'}`;
+    const current = grouped.get(key) || {id:visit.id,name:visit.name,address:visit.address,coord:visit.coord,count:0,lastVisit:visit.end || visit.start};
+    current.count += 1;
+    if((visit.end || visit.start || '') > (current.lastVisit || '')) current.lastVisit = visit.end || visit.start;
+    grouped.set(key,current);
+  });
+  return Array.from(grouped.values()).sort((a,b)=>b.count-a.count).slice(0,12);
+}
+
+function parseTimelineData(data){
+  const trips = [];
+  if(Array.isArray(data.timelineObjects)){
+    data.timelineObjects.forEach((item, index)=>{ if(item.activitySegment) trips.push(buildTripFromObject(item, index)); });
+  }
+  if(Array.isArray(data.semanticSegments)){
+    data.semanticSegments.forEach((item, index)=>{ if(item.activity || item.activitySegment) trips.push(buildTripFromSegment(item, index)); });
+  }
+  if(!trips.length && Array.isArray(data.rawSignals)){
+    data.rawSignals.forEach((item,index)=>{
+      const coord = parseGoogleCoord(item.position || item.location || {});
+      if(coord){
+        trips.push({id:'trip-'+index,title:'Raw signal',start:item.timestamp,end:item.timestamp,distanceMeters:0,startName:'Signal',endName:'Signal',startCoord:coord,endCoord:coord,path:[coord],source:'raw'});
+      }
+    });
+  }
+  const cleanedTrips = trips
+    .filter((trip)=>trip.startCoord || trip.endCoord || (trip.path && trip.path.length))
+    .map((trip)=>({...trip,path:(trip.path||[]).filter(Boolean)}));
+  cleanedTrips.sort((a,b)=>new Date(b.start||0)-new Date(a.start||0));
+  return { trips: cleanedTrips, places: extractPlaceVisits(data) };
+}
+
+function updateTimelineSummary(){
+  document.getElementById('timeline-trip-count').textContent = String(timelineTrips.length);
+  document.getElementById('timeline-place-count').textContent = String(timelinePlaces.length);
+  const totalMeters = timelineTrips.reduce((sum, trip)=>sum + Number(trip.distanceMeters||0), 0);
+  document.getElementById('timeline-distance').textContent = `${milesFromMeters(totalMeters)} mi`;
+  if(!timelineTrips.length){
+    document.getElementById('timeline-range').textContent = '—';
+    return;
+  }
+  const dates = timelineTrips.map((trip)=>new Date(trip.start||trip.end)).filter((d)=>!Number.isNaN(d.getTime())).sort((a,b)=>a-b);
+  document.getElementById('timeline-range').textContent = dates.length ? `${dates[0].toLocaleDateString('en-US',{month:'short',year:'numeric'})}–${dates[dates.length-1].toLocaleDateString('en-US',{month:'short',year:'numeric'})}` : '—';
+}
+
+function drawTimelineTrip(trip){
+  ensureTimelineMap();
+  if(!timelineLayerGroup) return;
+  timelineLayerGroup.clearLayers();
+  const linePoints = (trip && trip.path && trip.path.length ? trip.path : [trip?.startCoord, trip?.endCoord]).filter(Boolean);
+  if(linePoints.length > 1){
+    const line = L.polyline(linePoints,{color:'#e8855a',weight:4,opacity:.85}).addTo(timelineLayerGroup);
+    timelineMap.fitBounds(line.getBounds(),{padding:[24,24]});
+  }else if(linePoints.length === 1){
+    timelineMap.setView(linePoints[0], 12);
+  }else{
+    timelineMap.setView([39.5,-98.35],4);
+  }
+  if(trip?.startCoord) L.circleMarker(trip.startCoord,{radius:6,color:'#72cc82',fillOpacity:.9}).addTo(timelineLayerGroup).bindPopup(`Start: ${trip.startName}`);
+  if(trip?.endCoord) L.circleMarker(trip.endCoord,{radius:6,color:'#82b8e8',fillOpacity:.9}).addTo(timelineLayerGroup).bindPopup(`End: ${trip.endName}`);
+  if(!trip && timelinePlaces.length){
+    const bounds = [];
+    timelinePlaces.forEach((place)=>{
+      if(place.coord){
+        bounds.push(place.coord);
+        L.circleMarker(place.coord,{radius:Math.min(14, 4 + place.count),color:'#e8c070',fillOpacity:.65}).addTo(timelineLayerGroup).bindPopup(`${place.name} · ${place.count} visit${place.count===1?'':'s'}`);
+      }
+    });
+    if(bounds.length) timelineMap.fitBounds(bounds,{padding:[24,24]});
+  }
+}
+
+function selectTimelineTrip(tripId){
+  selectedTripId = tripId;
+  renderTimelineTrips();
+  const trip = timelineTrips.find((item)=>item.id===tripId) || null;
+  drawTimelineTrip(trip);
+}
+
+function renderTimelinePlaces(){
+  const container = document.getElementById('place-list');
+  if(!timelinePlaces.length){
+    container.innerHTML = '<div class="map-empty">Frequent stops will appear here after import.</div>';
+    return;
+  }
+  const maxCount = Math.max(...timelinePlaces.map((place)=>place.count), 1);
+  container.innerHTML = timelinePlaces.map((place)=>`
+    <div class="card place-card" onclick="drawTimelineTrip(null);highlightPlace('${place.id}')">
+      <div class="place-title">${place.name}</div>
+      <div class="place-badges">
+        <span class="mini-pill">${place.count} visits</span>
+        <span class="mini-pill">${place.lastVisit ? prettyDate(place.lastVisit) : 'Unknown'}</span>
+      </div>
+      <div class="place-meta">${place.address || 'No address in export'}</div>
+      <div class="place-bar"><span style="width:${(place.count/maxCount)*100}%"></span></div>
+    </div>
+  `).join('');
+}
+
+function highlightPlace(placeId){
+  document.querySelectorAll('.place-card').forEach((card, index)=>{
+    card.classList.toggle('active', timelinePlaces[index] && timelinePlaces[index].id === placeId);
+  });
+}
+
+function renderTimelineTrips(){
+  const list = document.getElementById('trip-list');
+  if(!timelineTrips.length){
+    list.innerHTML = '<div class="map-empty">Upload a Google Maps Timeline export to populate your trip list.</div>';
+    return;
+  }
+  const query = document.getElementById('timeline-search').value.trim().toLowerCase();
+  const sortMode = document.getElementById('timeline-sort').value;
+  const visible = timelineTrips.filter((trip)=>{
+    const haystack = `${trip.title} ${trip.startName} ${trip.endName}`.toLowerCase();
+    return !query || haystack.includes(query);
+  }).sort((a,b)=>{
+    if(sortMode === 'longest') return (b.distanceMeters||0)-(a.distanceMeters||0);
+    if(sortMode === 'shortest') return (a.distanceMeters||0)-(b.distanceMeters||0);
+    return new Date(b.start||0)-new Date(a.start||0);
+  });
+  if(!visible.length){
+    list.innerHTML = '<div class="map-empty">No trips match your current filter.</div>';
+    return;
+  }
+  list.innerHTML = visible.map((trip)=>`
+    <div class="card trip-card ${trip.id===selectedTripId?'active':''}" onclick="selectTimelineTrip('${trip.id}')">
+      <div class="trip-title">${trip.title}</div>
+      <div class="trip-route">${trip.startName} → ${trip.endName}</div>
+      <div class="trip-badges">
+        <span class="mini-pill">${milesFromMeters(trip.distanceMeters)} mi</span>
+        <span class="mini-pill">${trip.path.length} points</span>
+      </div>
+      <div class="trip-meta">${prettyDate(trip.start)}${trip.end ? ` → ${prettyDate(trip.end)}` : ''}</div>
+    </div>
+  `).join('');
+}
+
+function persistTimelineData(rawJson){
+  try{ localStorage.setItem(TIMELINE_STORAGE_KEY, rawJson); }catch(e){}
+}
+
+function loadPersistedTimeline(){
+  try{
+    const raw = localStorage.getItem(TIMELINE_STORAGE_KEY);
+    if(!raw) return;
+    const parsed = parseTimelineData(JSON.parse(raw));
+    timelineTrips = parsed.trips;
+    timelinePlaces = parsed.places;
+    selectedTripId = timelineTrips[0]?.id || null;
+    updateTimelineSummary();
+    renderTimelineTrips();
+    renderTimelinePlaces();
+    drawTimelineTrip(selectedTripId ? timelineTrips[0] : null);
+    document.getElementById('timeline-status').textContent = `Loaded saved timeline with ${timelineTrips.length} trips.`;
+  }catch(e){}
+}
+
+function importTimelineFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(loadEvent){
+    try{
+      const raw = loadEvent.target.result;
+      const parsed = parseTimelineData(JSON.parse(raw));
+      timelineTrips = parsed.trips;
+      timelinePlaces = parsed.places;
+      selectedTripId = timelineTrips[0]?.id || null;
+      updateTimelineSummary();
+      renderTimelineTrips();
+      renderTimelinePlaces();
+      drawTimelineTrip(selectedTripId ? timelineTrips[0] : null);
+      persistTimelineData(raw);
+      document.getElementById('timeline-status').textContent = `${file.name} loaded · ${timelineTrips.length} trips · ${timelinePlaces.length} places.`;
+    }catch(err){
+      document.getElementById('timeline-status').textContent = 'Could not parse that JSON file. Check that it is a Google Maps Timeline export.';
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearTimelineData(){
+  timelineTrips = [];
+  timelinePlaces = [];
+  selectedTripId = null;
+  try{ localStorage.removeItem(TIMELINE_STORAGE_KEY); }catch(e){}
+  updateTimelineSummary();
+  renderTimelineTrips();
+  renderTimelinePlaces();
+  drawTimelineTrip(null);
+  document.getElementById('timeline-status').textContent = 'Timeline data cleared.';
+}
 
 const STORAGE_KEY='lp_state';
 const defaultState={
@@ -1054,6 +1463,7 @@ function updateRoofStats(){
 hydrateUI();
 uf();
 renderCal();
+loadPersistedTimeline();
 
 // MOOD
 let MOODS=state.mood;
@@ -1521,7 +1931,7 @@ document.querySelectorAll('.dbf').forEach((b,i)=>{
 });
 
 // ── EXPORT / IMPORT ──
-const DATA_KEYS = ['lp_state','lp_goals','lp_skills','lp_books','lp_moods','lp_horos','lp_roof'];
+const DATA_KEYS = ['lp_state','lp_goals','lp_skills','lp_books','lp_moods','lp_horos','lp_roof','lp_timeline_maps'];
 
 function exportData() {
   const backup = {};
@@ -1560,6 +1970,7 @@ function importData(event) {
       ROOF = state.roofLog; hydrateUI(); uf(); renderCal();
       try { BOOKS = JSON.parse(localStorage.getItem('lp_books') || '[]'); renderBooks(); } catch(err) {}
       try { HOROS = JSON.parse(localStorage.getItem('lp_horos') || '[]'); renderHoro(); } catch(err) {}
+      loadPersistedTimeline();
       const fromDate = data._exported ? ' — from ' + data._exported.slice(0,10) : '';
       setStatus('Imported ' + count + ' data sets' + fromDate);
     } catch(err) {
@@ -1577,6 +1988,7 @@ function clearData() {
   state={...defaultState,finances:{...defaultState.finances},mood:[],roofLog:{},goals:[],skills:[]};
   GOALS = state.goals; SKILLS = state.skills; MOODS = state.mood; ROOF = state.roofLog; BOOKS = []; HOROS = [];
   hydrateUI(); uf(); renderGoals(); renderSkills(); renderBooks(); renderMood(); renderHoro(); renderCal();
+  clearTimelineData();
   setStatus('All data cleared');
 }
 

@@ -2,6 +2,17 @@
 
 Static dashboard app for tracking finances, mood, roof log, goals, skills, books, journal, and reflection.
 
+## Google Maps Timeline visualizer
+
+The dashboard now includes a **Maps** tab where you can upload a Google Maps Timeline export in JSON format and:
+
+- map trips and route points,
+- review estimated distance traveled,
+- inspect top visited places, and
+- filter/sort trips directly in the browser.
+
+Timeline files are parsed locally in your browser and can also be included in the app's export/import backup flow.
+
 ## Open it locally
 
 ### On your computer
